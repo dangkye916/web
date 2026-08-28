@@ -1,0 +1,49 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.calendar {
+    width: 500px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header button {
+    font-size: 30px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.week,
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.week div {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.day {
+    height: 60px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.day:hover {
+    background-color: #f2f2f2;
+}
