@@ -20,14 +20,14 @@ body {
 
 .header button {
     font-size: 30px;
-    border: none;
+    border: none; /* 테두리? */
     background: none;
-    cursor: pointer;
+    cursor: pointer;  /* 얜 뭐지 */
 }
 
 .week,
 .days {
-    display: grid;
+    display: grid;  /* 표 만드는거? */
     grid-template-columns: repeat(7, 1fr);
 }
 
@@ -47,3 +47,5 @@ body {
 .day:hover {
     background-color: #f2f2f2;
 }
+
+/* 영어 공부 많이 되겠는데.. */
