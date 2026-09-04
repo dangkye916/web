@@ -1,11 +1,11 @@
-const monthElement = document.getElementById("month"); // 변수 선언 - 변경 불가 아 html에서 클래스가 month인 애들 정보 가져오는건가? 클래스가 아니라 아이디인가
+const monthElement = document.getElementById("month"); // 변수 선언 - 변경 불가 아 html에서 아이디가 month인 애들 정보 가져오는거 아이디는 중복 없음 클래스는 한 클래스에 여러 요소 있을 수도 있음 그때는 배열처럼 사용하는 걸로 알고 있음
 const daysElement = document.getElementById("days"); // 변수 선언
 
 let currentDate = new Date(); // 변경 가능한 변수 선언
 
 function createCalendar() { // 함수
 
-    const year = currentDate.getFullYear(); // 위에 라이브러리에서 가져온 함수? 아 저 변수 year에 연도 저징하는거네
+    const year = currentDate.getFullYear(); // 아 저 변수 year에 연도 저장
     const month = currentDate.getMonth();
 
     monthElement.textContent = `${year}년 ${month + 1}월`;  // 화면에 년, 월 가져와서 띠우는거
