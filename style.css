@@ -6,10 +6,12 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 50px;
+    background-color: #eaf4ff;
 }
 
 .calendar {
     width: 500px;
+    background-color: white;
 }
 
 .header {
