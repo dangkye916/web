@@ -7,7 +7,7 @@ const closePopup = document.getElementById("closePopup");
 
 const scheduleInput = document.getElementById("scheduleInput");
 const saveSchedule = document.getElementById("saveSchedule");
-
+const deleteSchedule = document.getElementById("deleteSchedule");
 
 let currentDate = new Date();
 
@@ -213,3 +213,32 @@ scheduleInput.addEventListener("keydown", (event) => {
 
 /* 처음 캘린더 생성 */
 createCalendar();
+
+deleteSchedule.addEventListener("click", () => {
+
+    if (!schedules[selectedDateKey]) {
+        alert("삭제할 일정이 없습니다.");
+        return;
+    }
+
+    const result = confirm("이 일정을 삭제하시겠습니까?");
+
+    if (!result) {
+        return;
+    }
+
+    // 일정 삭제
+    delete schedules[selectedDateKey];
+
+    // localStorage 다시 저장
+    localStorage.setItem(
+        "schedules",
+        JSON.stringify(schedules)
+    );
+
+    // 팝업 닫기
+    popup.style.display = "none";
+
+    // 캘린더 다시 그리기
+    createCalendar();
+});
