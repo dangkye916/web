@@ -2,6 +2,12 @@
     box-sizing: border-box;
 }
 
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
 body {
     display: flex;
     justify-content: center;
@@ -127,6 +133,12 @@ body {
 
     border: 1px solid #ddd;
     border-radius: 5px;
+
+    /*
+    모바일 브라우저의
+    입력창 자동 확대 방지
+    */
+    font-size: 16px;
 }
 
 .button-group {
@@ -163,7 +175,7 @@ body {
 
 
 /* ==================================================
-   태블릿
+   패드
    601px ~ 900px
    ================================================== */
 
@@ -180,11 +192,11 @@ body {
         padding: 15px;
     }
 
+    /*
+    패드에서는 날짜 칸을
+    정사각형으로 만들지 않음
+    */
     .day {
-        /*
-        패드에서는 정사각형으로 만들지 않음.
-        노트북처럼 세로로 조금 길게 유지
-        */
         min-height: 95px;
     }
 
@@ -200,7 +212,6 @@ body {
         font-size: 12px;
     }
 
-    /* 패드의 팝업도 화면 안에 들어오도록 */
     .popup-content {
         width: 350px;
         max-width: 90vw;
@@ -215,37 +226,40 @@ body {
 
 @media (max-width: 600px) {
 
+    /*
+    휴대폰에서 화면 전체를 사용
+    */
+    html,
     body {
-        margin-top: 15px;
-        padding: 0 5px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
+    body {
+        margin: 15px 0 0 0;
+        padding: 0;
+
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+
+    /* -------------------------
+       캘린더 위치와 크기
+       ------------------------- */
+
     .calendar {
-        width: calc(100vw - 10px);
+        width: calc(100% - 10px);
+        margin: 0 auto;
         padding: 8px;
     }
 
+
     /* -------------------------
-       날짜 칸
+       헤더
        ------------------------- */
-
-    .day {
-        /*
-        정사각형 X
-
-        가로보다 세로가 1.35배 정도
-        길어지도록 설정
-        */
-        min-height: 0;
-        aspect-ratio: 0.75 / 1;
-
-        padding: 5px;
-    }
-
-    .week div {
-        padding: 8px 2px;
-        font-size: 14px;
-    }
 
     .header h2 {
         font-size: 22px;
@@ -253,6 +267,34 @@ body {
 
     .header button {
         font-size: 30px;
+        width: 40px;
+        height: 40px;
+    }
+
+
+    /* -------------------------
+       요일
+       ------------------------- */
+
+    .week div {
+        padding: 8px 2px;
+        font-size: 14px;
+    }
+
+
+    /* -------------------------
+       날짜 칸
+
+       정사각형이 아니라
+       세로로 조금 더 길게
+       ------------------------- */
+
+    .day {
+        min-height: 0;
+
+        aspect-ratio: 0.75 / 1;
+
+        padding: 5px;
     }
 
     .date-number {
@@ -260,34 +302,31 @@ body {
         margin-bottom: 4px;
     }
 
+
+    /* -------------------------
+       일정
+       ------------------------- */
+
     .schedule {
         font-size: 10px;
         padding: 3px;
-
-        /*
-        일정이 너무 길어지지 않게
-        */
         line-height: 1.2;
     }
 
 
     /* -------------------------
-       팝업
+       모바일 팝업
        ------------------------- */
 
     .popup {
+        width: 100vw;
+        height: 100vh;
+
         padding: 10px;
     }
 
     .popup-content {
-        /*
-        350px 고정 X
-
-        폰 화면 너비에 맞춰서
-        자동으로 작아짐
-        */
         width: calc(100vw - 40px);
-
         max-width: 330px;
 
         padding: 20px 15px;
@@ -308,10 +347,11 @@ body {
     }
 
     #scheduleInput {
+        font-size: 16px;
         padding: 9px;
+
         margin-top: 5px;
         margin-bottom: 10px;
-        font-size: 16px;
     }
 
     #saveSchedule,
@@ -323,20 +363,22 @@ body {
 
 
 /* ==================================================
-   아주 작은 휴대폰
+   작은 휴대폰
    400px 이하
    ================================================== */
 
 @media (max-width: 400px) {
 
     .calendar {
+        width: calc(100% - 10px);
         padding: 6px;
     }
 
+    /*
+    아주 작은 화면에서는
+    너무 길쭉하지 않도록 조금 조절
+    */
     .day {
-        /*
-        작은 폰에서는 조금 덜 길쭉하게
-        */
         aspect-ratio: 0.8 / 1;
         padding: 4px;
     }
@@ -350,6 +392,10 @@ body {
         font-size: 20px;
     }
 
+    .header button {
+        font-size: 28px;
+    }
+
     .date-number {
         font-size: 13px;
     }
@@ -361,6 +407,7 @@ body {
 
     .popup-content {
         width: calc(100vw - 30px);
+        max-width: 330px;
         padding: 17px 12px;
     }
 
@@ -377,20 +424,5 @@ body {
     #deleteSchedule {
         padding: 8px 15px;
         font-size: 13px;
-    }
-}
-
-@media (max-width: 600px) {
-    html,
-    body {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    .popup {
-        width: 100vw;
-        height: 100dvh;
-        overflow: hidden;
     }
 }
