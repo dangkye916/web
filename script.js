@@ -4,17 +4,19 @@ const daysElement = document.getElementById("days");
 const popup = document.getElementById("popup");
 const popupDate = document.getElementById("popupDate");
 const closePopup = document.getElementById("closePopup");
+
 const scheduleInput = document.getElementById("scheduleInput");
 const saveSchedule = document.getElementById("saveSchedule");
 
+
 let currentDate = new Date();
 
-let selectedYear;
-let selectedMonth;
-let selectedDate;
+let selectedDateKey = "";
 
-// 저장된 일정 불러오기
-let schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+
+/* 저장된 일정 가져오기 */
+let schedules =
+    JSON.parse(localStorage.getItem("schedules")) || {};
 
 
 function createCalendar() {
@@ -22,79 +24,88 @@ function createCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    monthElement.textContent = `${year}년 ${month + 1}월`;
+    monthElement.textContent =
+        `${year}년 ${month + 1}월`;
 
+
+    /* 기존 날짜 모두 삭제 */
     daysElement.innerHTML = "";
 
-    // 이번 달 1일의 요일
-    const firstDay = new Date(year, month, 1).getDay();
 
-    // 이번 달의 마지막 날짜
-    const lastDate = new Date(year, month + 1, 0).getDate();
+    /* 이번 달 1일의 요일 */
+    const firstDay =
+        new Date(year, month, 1).getDay();
 
 
-    // 1일 전 빈칸
+    /* 이번 달 마지막 날짜 */
+    const lastDate =
+        new Date(year, month + 1, 0).getDate();
+
+
+    /* 앞쪽 빈칸 */
     for (let i = 0; i < firstDay; i++) {
 
-        const empty = document.createElement("div");
+        const empty =
+            document.createElement("div");
 
         daysElement.appendChild(empty);
     }
 
 
-    // 날짜 생성
+    /* 날짜 만들기 */
     for (let date = 1; date <= lastDate; date++) {
 
-        const day = document.createElement("div");
+        const day =
+            document.createElement("div");
 
         day.classList.add("day");
 
 
-        // 날짜 숫자
-        const dateNumber = document.createElement("div");
+        /* 날짜 숫자 */
+        const dateNumber =
+            document.createElement("div");
+
+        dateNumber.classList.add("date-number");
 
         dateNumber.textContent = date;
-        dateNumber.classList.add("date-number");
 
         day.appendChild(dateNumber);
 
 
-        // 날짜별 저장 키
+        /* 날짜 고유 키 생성 */
         const dateKey =
             `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
 
 
-        // 저장된 일정이 있으면 화면에 표시
+        /* 저장된 일정이 있는 경우 */
         if (schedules[dateKey]) {
 
-            const scheduleText = document.createElement("div");
+            const scheduleElement =
+                document.createElement("div");
 
-            scheduleText.classList.add("schedule");
+            scheduleElement.classList.add("schedule");
 
-            scheduleText.textContent = schedules[dateKey];
+            scheduleElement.textContent =
+                schedules[dateKey];
 
-            day.appendChild(scheduleText);
+            day.appendChild(scheduleElement);
         }
 
 
-        // 날짜 클릭
+        /* 날짜 클릭 */
         day.addEventListener("click", () => {
 
-            selectedYear = year;
-            selectedMonth = month + 1;
-            selectedDate = date;
+            selectedDateKey = dateKey;
 
             popupDate.textContent =
-                `${selectedYear}년 ${selectedMonth}월 ${selectedDate}일`;
-
-            const selectedKey =
-                `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
+                `${year}년 ${month + 1}월 ${date}일`;
 
 
-            // 기존 일정이 있으면 입력창에 표시
-            if (schedules[selectedKey]) {
+            /* 기존 일정 있으면 입력창에 표시 */
+            if (schedules[dateKey]) {
 
-                scheduleInput.value = schedules[selectedKey];
+                scheduleInput.value =
+                    schedules[dateKey];
 
             } else {
 
@@ -113,45 +124,12 @@ function createCalendar() {
 }
 
 
-// 이전 달
-document.getElementById("prev").addEventListener("click", () => {
-
-    currentDate.setMonth(currentDate.getMonth() - 1);
-
-    createCalendar();
-});
-
-
-// 다음 달
-document.getElementById("next").addEventListener("click", () => {
-
-    currentDate.setMonth(currentDate.getMonth() + 1);
-
-    createCalendar();
-});
-
-
-// X 버튼으로 팝업 닫기
-closePopup.addEventListener("click", () => {
-
-    popup.style.display = "none";
-});
-
-
-// 바깥 클릭 시 닫기
-popup.addEventListener("click", (event) => {
-
-    if (event.target === popup) {
-
-        popup.style.display = "none";
-    }
-});
-
-
-// 일정 저장
+/* 일정 저장 */
 saveSchedule.addEventListener("click", () => {
 
-    const schedule = scheduleInput.value.trim();
+    const schedule =
+        scheduleInput.value.trim();
+
 
     if (schedule === "") {
 
@@ -161,28 +139,77 @@ saveSchedule.addEventListener("click", () => {
     }
 
 
-    const selectedKey =
-        `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
+    /* 객체에 저장 */
+    schedules[selectedDateKey] = schedule;
 
 
-    // 일정 저장
-    schedules[selectedKey] = schedule;
-
-
-    // localStorage에 저장
+    /* 브라우저에 저장 */
     localStorage.setItem(
         "schedules",
         JSON.stringify(schedules)
     );
 
 
-    // 팝업 닫기
     popup.style.display = "none";
 
 
-    // 캘린더 다시 그리기
+    /* ★ 캘린더 다시 그리기 */
     createCalendar();
 });
 
 
+/* 이전 달 */
+document
+    .getElementById("prev")
+    .addEventListener("click", () => {
+
+        currentDate.setMonth(
+            currentDate.getMonth() - 1
+        );
+
+        createCalendar();
+    });
+
+
+/* 다음 달 */
+document
+    .getElementById("next")
+    .addEventListener("click", () => {
+
+        currentDate.setMonth(
+            currentDate.getMonth() + 1
+        );
+
+        createCalendar();
+    });
+
+
+/* X 버튼 */
+closePopup.addEventListener("click", () => {
+
+    popup.style.display = "none";
+});
+
+
+/* 팝업 바깥쪽 클릭 */
+popup.addEventListener("click", (event) => {
+
+    if (event.target === popup) {
+
+        popup.style.display = "none";
+    }
+});
+
+
+/* Enter 키로 저장 */
+scheduleInput.addEventListener("keydown", (event) => {
+
+    if (event.key === "Enter") {
+
+        saveSchedule.click();
+    }
+});
+
+
+/* 처음 캘린더 생성 */
 createCalendar();
