@@ -311,7 +311,7 @@ body {
         padding: 9px;
         margin-top: 5px;
         margin-bottom: 10px;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     #saveSchedule,
@@ -369,7 +369,7 @@ body {
     }
 
     #scheduleInput {
-        font-size: 14px;
+        font-size: 16px;
         padding: 8px;
     }
 
