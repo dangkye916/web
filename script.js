@@ -13,6 +13,9 @@ let selectedYear;
 let selectedMonth;
 let selectedDate;
 
+// 저장된 일정 불러오기
+let schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+
 
 function createCalendar() {
 
@@ -30,7 +33,7 @@ function createCalendar() {
     const lastDate = new Date(year, month + 1, 0).getDate();
 
 
-    // 1일 전의 빈칸
+    // 1일 전 빈칸
     for (let i = 0; i < firstDay; i++) {
 
         const empty = document.createElement("div");
@@ -44,9 +47,34 @@ function createCalendar() {
 
         const day = document.createElement("div");
 
-        day.textContent = date;
-
         day.classList.add("day");
+
+
+        // 날짜 숫자
+        const dateNumber = document.createElement("div");
+
+        dateNumber.textContent = date;
+        dateNumber.classList.add("date-number");
+
+        day.appendChild(dateNumber);
+
+
+        // 날짜별 저장 키
+        const dateKey =
+            `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+
+
+        // 저장된 일정이 있으면 화면에 표시
+        if (schedules[dateKey]) {
+
+            const scheduleText = document.createElement("div");
+
+            scheduleText.classList.add("schedule");
+
+            scheduleText.textContent = schedules[dateKey];
+
+            day.appendChild(scheduleText);
+        }
 
 
         // 날짜 클릭
@@ -59,7 +87,20 @@ function createCalendar() {
             popupDate.textContent =
                 `${selectedYear}년 ${selectedMonth}월 ${selectedDate}일`;
 
-            scheduleInput.value = "";
+            const selectedKey =
+                `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
+
+
+            // 기존 일정이 있으면 입력창에 표시
+            if (schedules[selectedKey]) {
+
+                scheduleInput.value = schedules[selectedKey];
+
+            } else {
+
+                scheduleInput.value = "";
+            }
+
 
             popup.style.display = "flex";
 
@@ -97,7 +138,7 @@ closePopup.addEventListener("click", () => {
 });
 
 
-// 팝업 바깥을 클릭해도 닫기
+// 바깥 클릭 시 닫기
 popup.addEventListener("click", (event) => {
 
     if (event.target === popup) {
@@ -107,10 +148,10 @@ popup.addEventListener("click", (event) => {
 });
 
 
-// 저장 버튼
+// 일정 저장
 saveSchedule.addEventListener("click", () => {
 
-    const schedule = scheduleInput.value;
+    const schedule = scheduleInput.value.trim();
 
     if (schedule === "") {
 
@@ -119,11 +160,28 @@ saveSchedule.addEventListener("click", () => {
         return;
     }
 
-    alert(
-        `${selectedYear}년 ${selectedMonth}월 ${selectedDate}일\n${schedule}`
+
+    const selectedKey =
+        `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
+
+
+    // 일정 저장
+    schedules[selectedKey] = schedule;
+
+
+    // localStorage에 저장
+    localStorage.setItem(
+        "schedules",
+        JSON.stringify(schedules)
     );
 
+
+    // 팝업 닫기
     popup.style.display = "none";
+
+
+    // 캘린더 다시 그리기
+    createCalendar();
 });
 
 
