@@ -10,9 +10,10 @@ body {
     font-family: sans-serif;
 }
 
+
 /* =========================
-   캘린더 기본 설정
-   → 노트북, 태블릿
+   기본 캘린더
+   노트북
    ========================= */
 
 .calendar {
@@ -78,7 +79,7 @@ body {
 
 
 /* =========================
-   팝업 기본 설정
+   팝업
    ========================= */
 
 .popup {
@@ -95,10 +96,14 @@ body {
 
     justify-content: center;
     align-items: center;
+
+    padding: 15px;
 }
 
 .popup-content {
     width: 350px;
+    max-width: 100%;
+
     background-color: white;
     padding: 25px;
     border-radius: 15px;
@@ -119,6 +124,7 @@ body {
     padding: 10px;
     margin-top: 10px;
     margin-bottom: 15px;
+
     border: 1px solid #ddd;
     border-radius: 5px;
 }
@@ -156,38 +162,89 @@ body {
 }
 
 
-/* =========================
-   휴대폰에서만 적용
-   ========================= */
+/* ==================================================
+   태블릿
+   601px ~ 900px
+   ================================================== */
 
-@media (max-width: 600px) {
+@media (min-width: 601px) and (max-width: 900px) {
 
     body {
-        margin-top: 20px;
-        margin-left: 0;
-        margin-right: 0;
+        margin-top: 30px;
+        padding: 0 20px;
     }
 
     .calendar {
-        /* 화면 너비를 최대한 사용 */
-        width: calc(100vw - 20px);
-
-        /* 휴대폰에서는 날짜 칸 높이를 고정 */
-        padding: 10px;
+        width: 90vw;
+        max-width: 700px;
+        padding: 15px;
     }
 
     .day {
         /*
-        min-height를 사용하지 않고
-        화면 너비에 따라 높이 조절
+        패드에서는 정사각형으로 만들지 않음.
+        노트북처럼 세로로 조금 길게 유지
+        */
+        min-height: 95px;
+    }
+
+    .week div {
+        padding: 10px 5px;
+    }
+
+    .date-number {
+        font-size: 15px;
+    }
+
+    .schedule {
+        font-size: 12px;
+    }
+
+    /* 패드의 팝업도 화면 안에 들어오도록 */
+    .popup-content {
+        width: 350px;
+        max-width: 90vw;
+    }
+}
+
+
+/* ==================================================
+   휴대폰
+   600px 이하
+   ================================================== */
+
+@media (max-width: 600px) {
+
+    body {
+        margin-top: 15px;
+        padding: 0 5px;
+    }
+
+    .calendar {
+        width: calc(100vw - 10px);
+        padding: 8px;
+    }
+
+    /* -------------------------
+       날짜 칸
+       ------------------------- */
+
+    .day {
+        /*
+        정사각형 X
+
+        가로보다 세로가 1.35배 정도
+        길어지도록 설정
         */
         min-height: 0;
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 0.75 / 1;
+
         padding: 5px;
     }
 
     .week div {
         padding: 8px 2px;
+        font-size: 14px;
     }
 
     .header h2 {
@@ -200,19 +257,125 @@ body {
 
     .date-number {
         font-size: 14px;
+        margin-bottom: 4px;
     }
 
     .schedule {
         font-size: 10px;
         padding: 3px;
+
+        /*
+        일정이 너무 길어지지 않게
+        */
+        line-height: 1.2;
     }
 
+
+    /* -------------------------
+       팝업
+       ------------------------- */
+
     .popup {
-        padding: 15px;
+        padding: 10px;
     }
 
     .popup-content {
-        width: 100%;
-        max-width: 350px;
+        /*
+        350px 고정 X
+
+        폰 화면 너비에 맞춰서
+        자동으로 작아짐
+        */
+        width: calc(100vw - 40px);
+
+        max-width: 330px;
+
+        padding: 20px 15px;
+
+        border-radius: 12px;
+    }
+
+    .popup-content h3 {
+        font-size: 18px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+
+    .close {
+        top: 7px;
+        right: 10px;
+        font-size: 22px;
+    }
+
+    #scheduleInput {
+        padding: 9px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    #saveSchedule,
+    #deleteSchedule {
+        padding: 9px 20px;
+        font-size: 14px;
+    }
+}
+
+
+/* ==================================================
+   아주 작은 휴대폰
+   400px 이하
+   ================================================== */
+
+@media (max-width: 400px) {
+
+    .calendar {
+        padding: 6px;
+    }
+
+    .day {
+        /*
+        작은 폰에서는 조금 덜 길쭉하게
+        */
+        aspect-ratio: 0.8 / 1;
+        padding: 4px;
+    }
+
+    .week div {
+        font-size: 13px;
+        padding: 7px 1px;
+    }
+
+    .header h2 {
+        font-size: 20px;
+    }
+
+    .date-number {
+        font-size: 13px;
+    }
+
+    .schedule {
+        font-size: 9px;
+        padding: 2px;
+    }
+
+    .popup-content {
+        width: calc(100vw - 30px);
+        padding: 17px 12px;
+    }
+
+    .popup-content h3 {
+        font-size: 17px;
+    }
+
+    #scheduleInput {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #saveSchedule,
+    #deleteSchedule {
+        padding: 8px 15px;
+        font-size: 13px;
     }
 }
