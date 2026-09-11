@@ -379,3 +379,18 @@ body {
         font-size: 13px;
     }
 }
+
+@media (max-width: 600px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .popup {
+        width: 100vw;
+        height: 100dvh;
+        overflow: hidden;
+    }
+}
