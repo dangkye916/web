@@ -82,8 +82,6 @@ function createCalendar() {
                 schedules[dateKey] || "";
 
             popup.style.display = "flex";
-
-            scheduleInput.focus();
         });
 
 
