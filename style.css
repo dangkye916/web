@@ -41,10 +41,11 @@ body {
 }
 
 .day {
-    height: 60px;
-    padding: 10px;
+    min-height: 85px;
+    padding: 8px;
     border: 1px solid #ddd;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .day:hover {
@@ -125,4 +126,20 @@ body {
 
 #saveSchedule:hover {
     background-color: #357abd;
+}
+
+.date-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.schedule {
+    font-size: 12px;
+    background-color: #e7f1ff;
+    padding: 4px 6px;
+    border-radius: 5px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
