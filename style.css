@@ -167,3 +167,20 @@ body {
 #saveSchedule:hover {
     background-color: #357abd;
 }
+
+#deleteSchedule {
+    padding: 10px 25px;
+    margin-left: 8px;
+
+    border: none;
+    border-radius: 5px;
+
+    background-color: #e74c3c;
+    color: white;
+
+    cursor: pointer;
+}
+
+#deleteSchedule:hover {
+    background-color: #c0392b;
+}
