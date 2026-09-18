@@ -1,146 +1,276 @@
 * {
-    box-sizing: border-box;
-}
+  box-sizing: border-box;
+  }
 
 body {
-    display: flex;
-    justify-content: center;
-    margin-top: 50px;
-    background-color: #eaf4ff;
-    font-family: sans-serif;
+display: flex;
+justify-content: center;
+margin-top: 50px;
+background-color: #eaf4ff;
+font-family: sans-serif;
 }
 
 .calendar {
-    width: 500px;
-    background-color: white;
-    border-radius: 15px;
-    padding: 15px;
+width: 500px;
+background-color: white;
+border-radius: 15px;
+padding: 15px;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 
 .header button {
-    font-size: 30px;
-    border: none;
-    background: none;
-    cursor: pointer;
+font-size: 30px;
+border: none;
+background: none;
+cursor: pointer;
 }
 
 .week,
 .days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
+display: grid;
+grid-template-columns: repeat(7, 1fr);
 }
 
 .week div {
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
+text-align: center;
+font-weight: bold;
+padding: 10px;
 }
 
 .day {
-    min-height: 90px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    overflow: hidden;
+min-height: 90px;
+padding: 8px;
+border: 1px solid #ddd;
+cursor: pointer;
+overflow: hidden;
 }
 
 .day:hover {
-    background-color: #f2f2f2;
+background-color: #f2f2f2;
 }
 
 .date-number {
-    font-weight: bold;
-    margin-bottom: 5px;
+font-weight: bold;
+margin-bottom: 5px;
 }
 
 .schedule {
-    font-size: 12px;
-    background-color: #dbeeff;
-    padding: 4px 5px;
-    border-radius: 4px;
-    margin-top: 4px;
+font-size: 12px;
+background-color: #dbeeff;
+padding: 4px 5px;
+border-radius: 4px;
+margin-top: 4px;
 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+```
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+```
+
 }
 
+/* =========================
+팝업
+========================= */
+
 .popup {
-    display: none;
-    position: fixed;
+display: none;
 
-    top: 0;
-    left: 0;
+```
+position: fixed;
 
-    width: 100%;
-    height: 100%;
+top: 0;
+left: 0;
 
-    background-color: rgba(0, 0, 0, 0.4);
+width: 100%;
+height: 100%;
 
-    justify-content: center;
-    align-items: center;
+background-color: rgba(0, 0, 0, 0.4);
+
+justify-content: center;
+align-items: center;
+```
+
 }
 
 .popup-content {
-    width: 350px;
-    background-color: white;
-    padding: 25px;
-    border-radius: 15px;
-    position: relative;
-    text-align: center;
+width: 350px;
+
+```
+max-width: 90%;
+
+background-color: white;
+
+padding: 25px;
+
+border-radius: 15px;
+
+position: relative;
+
+text-align: center;
+```
+
 }
 
 .close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 25px;
-    cursor: pointer;
+position: absolute;
+
+```
+top: 10px;
+right: 15px;
+
+font-size: 25px;
+
+cursor: pointer;
+```
+
 }
 
-#scheduleInput {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.popup-content label {
+display: block;
+
+```
+text-align: left;
+
+font-size: 14px;
+
+font-weight: bold;
+
+margin-top: 12px;
+
+margin-bottom: 5px;
+```
+
 }
+
+.popup-content input,
+.popup-content textarea {
+width: 100%;
+
+```
+padding: 10px;
+
+border: 1px solid #ddd;
+
+border-radius: 5px;
+
+font-family: inherit;
+
+font-size: 14px;
+```
+
+}
+
+.popup-content textarea {
+height: 80px;
+
+```
+resize: vertical;
+```
+
+}
+
+#activityDate {
+cursor: pointer;
+}
+
+/* =========================
+버튼
+========================= */
 
 .button-group {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+display: flex;
+
+```
+justify-content: center;
+
+gap: 10px;
+
+margin-top: 20px;
+```
+
 }
 
 #saveSchedule {
-    padding: 10px 25px;
-    border: none;
-    border-radius: 5px;
-    background-color: #4a90e2;
-    color: white;
-    cursor: pointer;
+padding: 10px 25px;
+
+```
+border: none;
+
+border-radius: 5px;
+
+background-color: #4a90e2;
+
+color: white;
+
+cursor: pointer;
+```
+
 }
 
 #deleteSchedule {
-    padding: 10px 25px;
-    border: none;
-    border-radius: 5px;
-    background-color: #e74c3c;
-    color: white;
-    cursor: pointer;
+padding: 10px 25px;
+
+```
+border: none;
+
+border-radius: 5px;
+
+background-color: #e74c3c;
+
+color: white;
+
+cursor: pointer;
+```
+
 }
 
 #saveSchedule:hover {
-    background-color: #357abd;
+background-color: #357abd;
 }
 
 #deleteSchedule:hover {
-    background-color: #c0392b;
+background-color: #c0392b;
+}
+
+/* =========================
+모바일
+========================= */
+
+@media (max-width: 600px) {
+
+```
+body {
+    margin-top: 20px;
+    padding: 10px;
+}
+
+
+.calendar {
+    width: 100%;
+}
+
+
+.day {
+    min-height: 75px;
+    padding: 5px;
+}
+
+
+.schedule {
+    font-size: 11px;
+}
+
+
+.popup-content {
+    width: 90%;
+    padding: 20px;
+}
+```
+
 }
