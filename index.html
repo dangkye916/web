@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -8,45 +9,74 @@
 </head>
 <body>
 
-    <div class="calendar">
-        <div class="header">
-            <button id="prev">‹</button>
-            <h2 id="month"></h2>
-            <button id="next">›</button>
-        </div>
+```
+<div class="calendar">
 
-        <div class="week">
-            <div>일</div>
-            <div>월</div>
-            <div>화</div>
-            <div>수</div>
-            <div>목</div>
-            <div>금</div>
-            <div>토</div>
-        </div>
-
-        <div id="days" class="days"></div>
+    <div class="header">
+        <button id="prev">‹</button>
+        <h2 id="month"></h2>
+        <button id="next">›</button>
     </div>
 
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <span id="closePopup" class="close">&times;</span>
-
-            <h3 id="popupDate"></h3>
-
-            <input
-                type="text"
-                id="scheduleInput"
-                placeholder="일정을 입력하세요"
-            >
-
-            <div class="button-group">
-                <button id="saveSchedule">저장</button>
-                <button id="deleteSchedule">삭제</button>
-            </div>
-        </div>
+    <div class="week">
+        <div>일</div>
+        <div>월</div>
+        <div>화</div>
+        <div>수</div>
+        <div>목</div>
+        <div>금</div>
+        <div>토</div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="days" class="days"></div>
+
+</div>
+
+
+<!-- 일정 입력 팝업 -->
+<div id="popup" class="popup">
+
+    <div class="popup-content">
+
+        <span id="closePopup" class="close">&times;</span>
+
+        <h3 id="popupDate"></h3>
+
+        <label for="activityDate">활동 날짜</label>
+        <input type="date" id="activityDate">
+
+        <label for="activityTime">활동 시간</label>
+        <input
+            type="text"
+            id="activityTime"
+            placeholder="예: 13:00 ~ 15:00"
+        >
+
+        <label for="activityPlace">활동 장소</label>
+        <input
+            type="text"
+            id="activityPlace"
+            placeholder="예: 본관 2층 강당"
+        >
+
+        <label for="activityContent">활동 내용</label>
+        <textarea
+            id="activityContent"
+            placeholder="활동 내용을 입력하세요"
+        ></textarea>
+
+        <div class="button-group">
+            <button id="saveSchedule">저장</button>
+            <button id="deleteSchedule">삭제</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="script.js"></script>
+```
+
 </body>
 </html>
