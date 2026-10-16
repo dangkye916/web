@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생회 웹사이트</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <a class="logo" href="index.html">
+            <span class="logo-mark">🎓</span>
+            <span>학생회</span>
+        </a>
+
+        <!-- 로그인 페이지가 만들어지면 <a href="login.html">로 바꾸면 돼요 -->
+        <span class="login-button disabled" aria-disabled="true" title="준비 중">로그인</span>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>학생회 웹사이트에 오신 것을 환영합니다</h1>
+            <p>일정 확인부터 학교 규정, 축제 부스 예약, 투표까지<br>한 곳에서 편하게 이용해 보세요.</p>
+        </section>
+
+        <nav class="menu" aria-label="주요 메뉴">
+
+            <!-- 캘린더: 연결됨 -->
+            <a class="menu-card" href="calendar.html">
+                <span class="menu-icon icon-calendar">📅</span>
+                <span class="menu-text">
+                    <h2>캘린더</h2>
+                    <p>학생회 일정을 확인하고 추가해요</p>
+                </span>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <!-- 아래 기능들은 페이지가 만들어지면 <div>를 <a href="...">로 바꾸고
+                 disabled 클래스와 badge를 빼면 돼요 -->
+            <div class="menu-card disabled" aria-disabled="true">
+                <span class="menu-icon icon-rules">📖</span>
+                <span class="menu-text">
+                    <h2>학교 규정 정리</h2>
+                    <p>학교 규정을 한눈에 찾아봐요</p>
+                </span>
+                <span class="badge">준비 중</span>
+            </div>
+
+            <div class="menu-card disabled" aria-disabled="true">
+                <span class="menu-icon icon-booth">🎪</span>
+                <span class="menu-text">
+                    <h2>축제 부스 예약</h2>
+                    <p>축제 부스를 신청하고 예약해요</p>
+                </span>
+                <span class="badge">준비 중</span>
+            </div>
+
+            <div class="menu-card disabled" aria-disabled="true">
+                <span class="menu-icon icon-vote">🗳️</span>
+                <span class="menu-text">
+                    <h2>투표</h2>
+                    <p>진행 중인 투표에 참여해요</p>
+                </span>
+                <span class="badge">준비 중</span>
+            </div>
+
+        </nav>
+    </main>
+
+    <footer class="site-footer">
+        © 학생회
+    </footer>
+
+</body>
+</html>
