@@ -23,7 +23,7 @@
 
             <!-- 로그인 전 -->
             <div id="loginView">
-                <p class="login-desc">학번을 입력하면 로그인돼요.</p>
+                <p class="login-desc">5자리 학번을 입력하면 로그인돼요.<br>(학년 1자리 + 반 2자리 + 번호 2자리 · 예: 2학년 3반 4번 → 20304)</p>
 
                 <form id="loginForm" autocomplete="off">
                     <label for="studentId">학번</label>
@@ -31,8 +31,8 @@
                         type="text"
                         id="studentId"
                         inputmode="numeric"
-                        maxlength="10"
-                        placeholder="학번을 입력하세요"
+                        maxlength="5"
+                        placeholder="예: 20304"
                     >
 
                     <p id="loginError" class="login-error" hidden></p>
