@@ -58,8 +58,13 @@ loginForm.addEventListener("submit", event => {
         return;
     }
 
+    if (!Auth.isValidId(studentId)) {
+        showError("학번은 5자리 숫자로 입력해 주세요. (예: 2학년 3반 4번 → 20304)");
+        return;
+    }
+
     if (!Auth.login(studentId)) {
-        showError("올바른 학번을 입력해 주세요.");
+        showError("이 브라우저에서는 로그인 정보를 저장할 수 없어요. 쿠키/사이트 데이터 차단 설정을 확인해 주세요.");
         return;
     }
 
