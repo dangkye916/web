@@ -179,6 +179,17 @@ function createCalendar() {
         const day = document.createElement("div");
         day.classList.add("day");
 
+        // 오늘 날짜 강조
+        const today = new Date();
+
+        if (
+            year === today.getFullYear() &&
+            month === today.getMonth() &&
+            date === today.getDate()
+        ) {
+            day.classList.add("today");
+        }
+
         const dateNumber = document.createElement("div");
         dateNumber.classList.add("date-number");
         dateNumber.textContent = date;
