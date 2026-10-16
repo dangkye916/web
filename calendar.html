@@ -9,6 +9,13 @@
 <body>
 
     <div class="calendar">
+        <div class="top-row">
+            <a class="back-link" href="index.html">← 메인으로</a>
+            <div id="userArea" class="user-area"></div>
+        </div>
+
+        <p id="modeNotice" class="mode-notice"></p>
+
         <div class="header">
             <button id="prev" aria-label="이전 달">‹</button>
             <h2 id="month"></h2>
@@ -83,7 +90,7 @@
                 <dd id="detailContent"></dd>
             </dl>
 
-            <div class="detail-actions">
+            <div class="detail-actions" id="detailActions">
                 <button id="detailFavorite" class="favorite-button"></button>
                 <button id="detailEdit" class="edit-button">수정</button>
                 <button id="detailDelete" class="delete-button">삭제</button>
@@ -92,6 +99,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
