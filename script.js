@@ -1,203 +1,239 @@
-const monthElement = document.getElementById("month");
-const daysElement = document.getElementById("days");
 
-const popup = document.getElementById("popup");
-const popupDate = document.getElementById("popupDate");
-const closePopup = document.getElementById("closePopup");
-
-const scheduleInput = document.getElementById("scheduleInput");
-const saveSchedule = document.getElementById("saveSchedule");
-const deleteSchedule = document.getElementById("deleteSchedule");
-
-let currentDate = new Date();
-let selectedDateKey = "";
-
-let schedules =
-    JSON.parse(localStorage.getItem("schedules")) || {};
-
-
-function createCalendar() {
-
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-
-    monthElement.textContent =
-        `${year}년 ${month + 1}월`;
-
-    daysElement.innerHTML = "";
-
-    const firstDay =
-        new Date(year, month, 1).getDay();
-
-    const lastDate =
-        new Date(year, month + 1, 0).getDate();
-
-
-    for (let i = 0; i < firstDay; i++) {
-
-        const empty = document.createElement("div");
-
-        daysElement.appendChild(empty);
-    }
-
-
-    for (let date = 1; date <= lastDate; date++) {
-
-        const day = document.createElement("div");
-        day.classList.add("day");
-
-        const dateNumber = document.createElement("div");
-        dateNumber.classList.add("date-number");
-        dateNumber.textContent = date;
-
-        day.appendChild(dateNumber);
-
-
-        const dateKey =
-            `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-
-
-        if (schedules[dateKey]) {
-
-            const scheduleElement =
-                document.createElement("div");
-
-            scheduleElement.classList.add("schedule");
-
-            scheduleElement.textContent =
-                schedules[dateKey];
-
-            day.appendChild(scheduleElement);
-        }
-
-
-        day.addEventListener("click", () => {
-
-            selectedDateKey = dateKey;
-
-            popupDate.textContent =
-                `${year}년 ${month + 1}월 ${date}일`;
-
-            scheduleInput.value =
-                schedules[dateKey] || "";
-
-            popup.style.display = "flex";
-        });
-
-
-        daysElement.appendChild(day);
-    }
+* {
+    box-sizing: border-box;
 }
 
+body {
+    display: flex;
+    justify-content: center;
+    margin: 50px 0;
+    background-color: #eaf4ff;
+    font-family: sans-serif;
+}
 
-// 저장
-saveSchedule.addEventListener("click", () => {
+button,
+input {
+    font: inherit;
+}
 
-    const schedule = scheduleInput.value.trim();
+button {
+    cursor: pointer;
+}
 
-    if (schedule === "") {
+.calendar {
+    width: 500px;
+    max-width: 100%;
+    background-color: white;
+    border-radius: 15px;
+    padding: 15px;
+}
 
-        alert("일정을 입력해주세요.");
-        return;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    font-size: 22px;
+}
+
+.header button {
+    font-size: 30px;
+    border: none;
+    background: none;
+}
+
+.week,
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.week div {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px 0;
+}
+
+.day {
+    min-width: 0;
+    min-height: 90px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.day:hover {
+    background-color: #f2f7ff;
+}
+
+.date-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.schedule {
+    font-size: 12px;
+    background-color: #dbeeff;
+    padding: 4px 5px;
+    border-radius: 4px;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    z-index: 100;
+}
+
+.popup-content {
+    width: 350px;
+    max-width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    background-color: white;
+    padding: 25px;
+    border-radius: 15px;
+    position: relative;
+    text-align: center;
+}
+
+.close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 25px;
+    border: none;
+    background: none;
+}
+
+#popupDate {
+    padding: 0 20px;
+}
+
+#scheduleList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    margin: 15px 0;
+}
+
+.schedule-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.schedule-item-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.schedule-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.favorite-button,
+.delete-button {
+    border: none;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+
+.favorite-button {
+    background-color: #fff4c2;
+    color: #8a6800;
+    font-size: 18px;
+}
+
+.delete-button {
+    background-color: #e74c3c;
+    color: white;
+    font-size: 12px;
+}
+
+#scheduleInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#saveSchedule {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4a90e2;
+    color: white;
+}
+
+#saveSchedule:hover {
+    background-color: #357abd;
+}
+
+.empty-message {
+    color: #888;
+    font-size: 14px;
+    padding: 10px;
+}
+
+@media (max-width: 540px) {
+    body {
+        margin: 15px 0;
     }
 
-    schedules[selectedDateKey] = schedule;
-
-    localStorage.setItem(
-        "schedules",
-        JSON.stringify(schedules)
-    );
-
-    popup.style.display = "none";
-
-    createCalendar();
-});
-
-
-// 삭제
-deleteSchedule.addEventListener("click", () => {
-
-    if (!selectedDateKey) {
-        return;
+    .calendar {
+        padding: 8px;
     }
 
-    if (!schedules[selectedDateKey]) {
-
-        alert("삭제할 일정이 없습니다.");
-        return;
+    .header h2 {
+        font-size: 18px;
     }
 
-    const answer =
-        confirm("이 일정을 삭제하시겠습니까?");
-
-    if (!answer) {
-        return;
+    .week div {
+        font-size: 13px;
     }
 
-    delete schedules[selectedDateKey];
-
-    localStorage.setItem(
-        "schedules",
-        JSON.stringify(schedules)
-    );
-
-    scheduleInput.value = "";
-
-    popup.style.display = "none";
-
-    createCalendar();
-});
-
-
-// 이전 달
-document.getElementById("prev")
-.addEventListener("click", () => {
-
-    currentDate.setMonth(
-        currentDate.getMonth() - 1
-    );
-
-    createCalendar();
-});
-
-
-// 다음 달
-document.getElementById("next")
-.addEventListener("click", () => {
-
-    currentDate.setMonth(
-        currentDate.getMonth() + 1
-    );
-
-    createCalendar();
-});
-
-
-// X 버튼
-closePopup.addEventListener("click", () => {
-
-    popup.style.display = "none";
-});
-
-
-// 팝업 바깥 클릭
-popup.addEventListener("click", (event) => {
-
-    if (event.target === popup) {
-
-        popup.style.display = "none";
+    .day {
+        min-height: 70px;
+        padding: 3px;
     }
-});
 
-
-// Enter로 저장
-scheduleInput.addEventListener("keydown", (event) => {
-
-    if (event.key === "Enter") {
-
-        saveSchedule.click();
+    .date-number {
+        font-size: 12px;
     }
-});
 
+    .schedule {
+        font-size: 10px;
+        padding: 3px;
+    }
 
-createCalendar();
+    .popup-content {
+        padding: 20px;
+    }
+}
