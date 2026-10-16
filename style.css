@@ -483,6 +483,105 @@ button:active {
     background-color: #f6f8fb;
 }
 
+[hidden] {
+    display: none !important;
+}
+
+/* 위쪽 줄: 메인으로 링크 + 로그인 정보 */
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.top-row .back-link {
+    margin: 0;
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login-button {
+    padding: 7px 16px;
+    border-radius: 999px;
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.login-button:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background-color: #f1f4f9;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.role-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: #e0e5ee;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.role-badge.admin {
+    background: linear-gradient(135deg, #5b9bff, #7c6cf0);
+    color: white;
+}
+
+.logout-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.logout-button:hover {
+    background-color: #fdeaea;
+    color: var(--danger-dark);
+}
+
+/* 보기 전용 / 관리자 안내 */
+.mode-notice {
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background-color: #f4f6fa;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.mode-notice.admin {
+    background-color: var(--primary-soft);
+    color: #2a5db0;
+}
+
+/* 학생에게 보이는 즐겨찾기 표시 (누를 수 없음) */
+.read-star {
+    padding: 0 6px;
+    font-size: 17px;
+    color: var(--star);
+}
+
 /* 메인으로 돌아가는 링크 */
 .back-link {
     display: inline-block;
