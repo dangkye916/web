@@ -59,7 +59,7 @@ loginForm.addEventListener("submit", event => {
     }
 
     if (!Auth.isValidId(studentId)) {
-        showError("학번은 5자리 숫자로 입력해 주세요. (예: 2학년 3반 4번 → 20304)");
+        showError("학번은 5자리 숫자로 입력해 주세요.");
         return;
     }
 
