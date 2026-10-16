@@ -1,18 +1,19 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생회 캘린더</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="calendar">
         <div class="header">
-            <button id="prev">‹</button>
+            <button id="prev" aria-label="이전 달">‹</button>
             <h2 id="month"></h2>
-            <button id="next">›</button>
+            <button id="next" aria-label="다음 달">›</button>
         </div>
 
         <div class="week">
@@ -28,22 +29,28 @@
         <div id="days" class="days"></div>
     </div>
 
+    <!-- 날짜별 일정 팝업 -->
     <div id="popup" class="popup">
         <div class="popup-content">
-            <span id="closePopup" class="close">&times;</span>
+
+            <button id="closePopup" class="close"
+                aria-label="닫기">&times;</button>
 
             <h3 id="popupDate"></h3>
 
+            <!-- 일정 목록 -->
+            <div id="scheduleList"></div>
+
+            <!-- 새 일정 추가 -->
             <input
                 type="text"
                 id="scheduleInput"
-                placeholder="일정을 입력하세요"
+                placeholder="새 일정을 입력하세요"
+                maxlength="200"
             >
 
-            <div class="button-group">
-                <button id="saveSchedule">저장</button>
-                <button id="deleteSchedule">삭제</button>
-            </div>
+            <button id="saveSchedule">일정 추가</button>
+
         </div>
     </div>
 
