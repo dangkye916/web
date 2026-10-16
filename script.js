@@ -1,20 +1,41 @@
-
 const monthElement = document.getElementById("month");
 const daysElement = document.getElementById("days");
 
+// 날짜 팝업
 const popup = document.getElementById("popup");
 const popupDate = document.getElementById("popupDate");
 const closePopup = document.getElementById("closePopup");
-
-const scheduleInput = document.getElementById("scheduleInput");
-const saveSchedule = document.getElementById("saveSchedule");
 const scheduleList = document.getElementById("scheduleList");
 
+// 입력 폼
+const scheduleForm = document.getElementById("scheduleForm");
+const formTitle = document.getElementById("formTitle");
+const titleInput = document.getElementById("titleInput");
+const datetimeInput = document.getElementById("datetimeInput");
+const placeInput = document.getElementById("placeInput");
+const contentInput = document.getElementById("contentInput");
+const saveSchedule = document.getElementById("saveSchedule");
+const cancelEdit = document.getElementById("cancelEdit");
+
+// 상세 팝업
+const detailPopup = document.getElementById("detailPopup");
+const closeDetail = document.getElementById("closeDetail");
+const detailTitle = document.getElementById("detailTitle");
+const detailDatetime = document.getElementById("detailDatetime");
+const detailPlace = document.getElementById("detailPlace");
+const detailContent = document.getElementById("detailContent");
+const detailFavorite = document.getElementById("detailFavorite");
+const detailEdit = document.getElementById("detailEdit");
+const detailDelete = document.getElementById("detailDelete");
+
 let currentDate = new Date();
-let selectedDateKey = "";
+let selectedDateKey = "";   // 날짜 팝업에서 선택된 날짜
+let editingId = null;       // 수정 중인 일정 ID (없으면 null)
+let detailRef = null;       // 상세 팝업에 열려 있는 일정 { dateKey, id }
 
 
-// 일정 데이터 불러오기
+// ---------- 데이터 ----------
+
 let schedules =
     JSON.parse(localStorage.getItem("schedules")) || {};
 
@@ -23,99 +44,136 @@ let oldFavorites =
 
 let scheduleIdCounter = 1;
 
-
-// 일정마다 고유 ID 생성
 function createScheduleId() {
     return `${Date.now()}-${scheduleIdCounter++}`;
 }
 
+// 예전 형식(문자열 / text 필드)을 새 형식으로 변환
+// 새 형식: { id, title, datetime, place, content, favorite }
+function normalizeSchedule(item, dateKey) {
 
-// 기존 일정 데이터를 새 형식으로 변환
-// 새 형식: 날짜별 일정 배열
+    if (typeof item === "string") {
+        return {
+            id: createScheduleId(),
+            title: item,
+            datetime: dateKey,
+            place: "",
+            content: "",
+            favorite: false
+        };
+    }
+
+    return {
+        id: item.id ?? createScheduleId(),
+        title: item.title ?? item.text ?? "",
+        datetime: item.datetime ?? dateKey,
+        place: item.place ?? "",
+        content: item.content ?? "",
+        favorite: Boolean(item.favorite)
+    };
+}
+
 for (const dateKey in schedules) {
 
-    const oldSchedule = schedules[dateKey];
+    const old = schedules[dateKey];
 
-    if (typeof oldSchedule === "string") {
+    if (typeof old === "string") {
 
-        schedules[dateKey] = oldSchedule.trim()
+        schedules[dateKey] = old.trim()
             ? [{
-                id: createScheduleId(),
-                text: oldSchedule,
+                ...normalizeSchedule(old, dateKey),
                 favorite: oldFavorites.includes(dateKey)
             }]
             : [];
 
-    } else if (Array.isArray(oldSchedule)) {
+    } else if (Array.isArray(old)) {
 
-        schedules[dateKey] = oldSchedule.map(item => {
-
-            if (typeof item === "string") {
-                return {
-                    id: createScheduleId(),
-                    text: item,
-                    favorite: false
-                };
-            }
-
-            return {
-                id: item.id ?? createScheduleId(),
-                text: item.text ?? item.title ?? "",
-                favorite: Boolean(item.favorite)
-            };
-        });
+        schedules[dateKey] =
+            old.map(item => normalizeSchedule(item, dateKey));
 
     } else {
 
         schedules[dateKey] = [];
     }
+
+    if (schedules[dateKey].length === 0) {
+        delete schedules[dateKey];
+    }
 }
 
-
-// 변환한 일정 저장
 function saveSchedules() {
-    localStorage.setItem(
-        "schedules",
-        JSON.stringify(schedules)
-    );
+    localStorage.setItem("schedules", JSON.stringify(schedules));
 }
 
 saveSchedules();
 
 
-// 날짜별 일정 목록 가져오기
+// 날짜별 일정 목록 (일시 순서로 정렬)
 function getSchedules(dateKey) {
-    return schedules[dateKey] || [];
+    return (schedules[dateKey] || []).slice().sort(
+        (a, b) => (a.datetime || "").localeCompare(b.datetime || "")
+    );
+}
+
+function findSchedule(dateKey, id) {
+    return (schedules[dateKey] || []).find(item => item.id === id);
+}
+
+function removeSchedule(dateKey, id) {
+
+    schedules[dateKey] =
+        (schedules[dateKey] || []).filter(item => item.id !== id);
+
+    if (schedules[dateKey].length === 0) {
+        delete schedules[dateKey];
+    }
 }
 
 
-// 달력 생성
+// ---------- 표시 형식 ----------
+
+function formatDatetime(value) {
+
+    if (!value) {
+        return "미정";
+    }
+
+    const [datePart, timePart] = value.split("T");
+    const [year, month, day] = datePart.split("-");
+
+    return `${year}년 ${Number(month)}월 ${Number(day)}일` +
+        (timePart ? ` ${timePart}` : "");
+}
+
+// datetime-local 입력에 넣을 수 있는 형식으로 변환
+function toInputValue(value, fallbackDateKey) {
+
+    if (!value) {
+        return `${fallbackDateKey}T09:00`;
+    }
+
+    return value.includes("T") ? value : `${value}T09:00`;
+}
+
+
+// ---------- 달력 ----------
+
 function createCalendar() {
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    monthElement.textContent =
-        `${year}년 ${month + 1}월`;
+    monthElement.textContent = `${year}년 ${month + 1}월`;
 
     daysElement.innerHTML = "";
 
-    const firstDay =
-        new Date(year, month, 1).getDay();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
 
-    const lastDate =
-        new Date(year, month + 1, 0).getDate();
-
-
-    // 첫 주의 빈칸
     for (let i = 0; i < firstDay; i++) {
-        daysElement.appendChild(
-            document.createElement("div")
-        );
+        daysElement.appendChild(document.createElement("div"));
     }
 
-
-    // 날짜 생성
     for (let date = 1; date <= lastDate; date++) {
 
         const day = document.createElement("div");
@@ -124,42 +182,38 @@ function createCalendar() {
         const dateNumber = document.createElement("div");
         dateNumber.classList.add("date-number");
         dateNumber.textContent = date;
-
         day.appendChild(dateNumber);
 
         const dateKey =
             `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
 
-
-        // 해당 날짜의 모든 일정 표시
+        // 캘린더에는 제목만 표시
         getSchedules(dateKey).forEach(schedule => {
 
-            const scheduleElement =
-                document.createElement("div");
-
+            const scheduleElement = document.createElement("div");
             scheduleElement.classList.add("schedule");
 
+            if (schedule.favorite) {
+                scheduleElement.classList.add("favorite");
+            }
+
             scheduleElement.textContent =
-                (schedule.favorite ? "★ " : "") +
-                schedule.text;
+                (schedule.favorite ? "★ " : "") + schedule.title;
+
+            scheduleElement.title = schedule.title;
+
+            // 제목을 누르면 상세 내용 표시 (날짜 팝업은 열지 않음)
+            scheduleElement.addEventListener("click", event => {
+                event.stopPropagation();
+                openDetail(dateKey, schedule.id);
+            });
 
             day.appendChild(scheduleElement);
         });
 
-
-        // 날짜를 누르면 일정 팝업 열기
+        // 날짜 칸을 누르면 날짜 팝업 열기
         day.addEventListener("click", () => {
-
-            selectedDateKey = dateKey;
-
-            popupDate.textContent =
-                `${year}년 ${month + 1}월 ${date}일`;
-
-            scheduleInput.value = "";
-
-            renderScheduleList();
-
-            popup.style.display = "flex";
+            openDayPopup(dateKey);
         });
 
         daysElement.appendChild(day);
@@ -167,7 +221,22 @@ function createCalendar() {
 }
 
 
-// 팝업의 일정 목록 표시
+// ---------- 날짜 팝업 ----------
+
+function openDayPopup(dateKey) {
+
+    selectedDateKey = dateKey;
+
+    const [year, month, day] = dateKey.split("-");
+    popupDate.textContent =
+        `${year}년 ${Number(month)}월 ${Number(day)}일`;
+
+    resetForm();
+    renderScheduleList();
+
+    popup.style.display = "flex";
+}
+
 function renderScheduleList() {
 
     scheduleList.innerHTML = "";
@@ -177,95 +246,67 @@ function renderScheduleList() {
     if (dateSchedules.length === 0) {
 
         const emptyMessage = document.createElement("p");
-
         emptyMessage.classList.add("empty-message");
         emptyMessage.textContent = "등록된 일정이 없습니다.";
-
         scheduleList.appendChild(emptyMessage);
 
         return;
     }
-
 
     dateSchedules.forEach(schedule => {
 
         const item = document.createElement("div");
         item.classList.add("schedule-item");
 
-        const text = document.createElement("span");
-
+        // 제목 (누르면 상세 내용)
+        const text = document.createElement("button");
+        text.type = "button";
         text.classList.add("schedule-item-text");
-        text.textContent = schedule.text;
+        text.textContent = schedule.title;
+        text.title = "상세 보기";
+
+        text.addEventListener("click", () => {
+            openDetail(selectedDateKey, schedule.id);
+        });
 
         const actions = document.createElement("div");
         actions.classList.add("schedule-actions");
 
-
-        // 즐겨찾기 버튼
-        const favoriteButton =
-            document.createElement("button");
-
+        // 즐겨찾기
+        const favoriteButton = document.createElement("button");
+        favoriteButton.type = "button";
         favoriteButton.classList.add("favorite-button");
-
-        favoriteButton.textContent =
-            schedule.favorite ? "★" : "☆";
-
+        favoriteButton.textContent = schedule.favorite ? "★" : "☆";
         favoriteButton.title =
-            schedule.favorite
-                ? "즐겨찾기 해제"
-                : "즐겨찾기 추가";
-
-        favoriteButton.setAttribute(
-            "aria-label",
-            favoriteButton.title
-        );
+            schedule.favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
+        favoriteButton.setAttribute("aria-label", favoriteButton.title);
 
         favoriteButton.addEventListener("click", () => {
-
-            schedule.favorite = !schedule.favorite;
-
-            saveSchedules();
-
-            renderScheduleList();
-            createCalendar();
+            toggleFavorite(selectedDateKey, schedule.id);
         });
 
+        // 수정
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.classList.add("edit-button");
+        editButton.textContent = "수정";
 
-        // 개별 일정 삭제 버튼
-        const deleteButton =
-            document.createElement("button");
+        editButton.addEventListener("click", () => {
+            startEdit(selectedDateKey, schedule.id);
+        });
 
+        // 삭제
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
         deleteButton.classList.add("delete-button");
         deleteButton.textContent = "삭제";
 
         deleteButton.addEventListener("click", () => {
-
-            const answer = confirm(
-                `「${schedule.text}」 일정을 삭제할까?`
-            );
-
-            if (!answer) {
-                return;
-            }
-
-            schedules[selectedDateKey] =
-                getSchedules(selectedDateKey).filter(
-                    item => item.id !== schedule.id
-                );
-
-            // 일정이 모두 삭제되면 날짜 항목도 제거
-            if (schedules[selectedDateKey].length === 0) {
-                delete schedules[selectedDateKey];
-            }
-
-            saveSchedules();
-
-            renderScheduleList();
-            createCalendar();
+            deleteSchedule(selectedDateKey, schedule.id);
         });
 
-
         actions.appendChild(favoriteButton);
+        actions.appendChild(editButton);
         actions.appendChild(deleteButton);
 
         item.appendChild(text);
@@ -276,85 +317,299 @@ function renderScheduleList() {
 }
 
 
-// 일정 추가
-saveSchedule.addEventListener("click", () => {
+// ---------- 즐겨찾기 / 삭제 / 수정 ----------
 
-    const text = scheduleInput.value.trim();
+function toggleFavorite(dateKey, id) {
 
-    if (text === "") {
-        alert("추가할 일정을 입력해 줘.");
+    const schedule = findSchedule(dateKey, id);
+
+    if (!schedule) {
         return;
     }
 
-    if (!selectedDateKey) {
+    schedule.favorite = !schedule.favorite;
+
+    saveSchedules();
+    refreshViews();
+}
+
+function deleteSchedule(dateKey, id) {
+
+    const schedule = findSchedule(dateKey, id);
+
+    if (!schedule) {
         return;
     }
 
-    if (!schedules[selectedDateKey]) {
-        schedules[selectedDateKey] = [];
+    if (!confirm(`「${schedule.title}」 일정을 삭제할까?`)) {
+        return;
     }
 
-    schedules[selectedDateKey].push({
-        id: createScheduleId(),
-        text: text,
-        favorite: false
-    });
+    removeSchedule(dateKey, id);
+
+    // 수정 중이던 일정을 지웠다면 폼 초기화
+    if (editingId === id) {
+        resetForm();
+    }
+
+    // 상세 팝업이 이 일정을 보여 주고 있었다면 닫기
+    if (detailRef && detailRef.id === id) {
+        closeDetailPopup();
+    }
+
+    saveSchedules();
+    refreshViews();
+}
+
+function startEdit(dateKey, id) {
+
+    const schedule = findSchedule(dateKey, id);
+
+    if (!schedule) {
+        return;
+    }
+
+    // 상세 팝업에서 눌렀다면 날짜 팝업으로 전환
+    closeDetailPopup();
+
+    if (popup.style.display !== "flex" || selectedDateKey !== dateKey) {
+        openDayPopup(dateKey);
+    }
+
+    editingId = id;
+    editingDateKey = dateKey;
+
+    titleInput.value = schedule.title;
+    datetimeInput.value = toInputValue(schedule.datetime, dateKey);
+    placeInput.value = schedule.place;
+    contentInput.value = schedule.content;
+
+    formTitle.textContent = "일정 수정";
+    saveSchedule.textContent = "수정 완료";
+    cancelEdit.hidden = false;
+
+    titleInput.focus();
+}
+
+let editingDateKey = "";
+
+function resetForm() {
+
+    editingId = null;
+    editingDateKey = "";
+
+    titleInput.value = "";
+    datetimeInput.value = `${selectedDateKey}T09:00`;
+    placeInput.value = "";
+    contentInput.value = "";
+
+    formTitle.textContent = "새 일정 추가";
+    saveSchedule.textContent = "일정 추가";
+    cancelEdit.hidden = true;
+}
+
+cancelEdit.addEventListener("click", resetForm);
+
+
+// ---------- 추가 / 수정 저장 ----------
+
+scheduleForm.addEventListener("submit", event => {
+
+    event.preventDefault();
+
+    const title = titleInput.value.trim();
+
+    if (title === "") {
+        alert("일정 제목을 입력해 줘.");
+        titleInput.focus();
+        return;
+    }
+
+    // 일시의 날짜 부분이 저장될 날짜가 됨 (비워 두면 선택한 날짜)
+    const datetime = datetimeInput.value || selectedDateKey;
+    const newDateKey = datetime.slice(0, 10);
+
+    const data = {
+        title: title,
+        datetime: datetime,
+        place: placeInput.value.trim(),
+        content: contentInput.value.trim()
+    };
+
+    if (editingId) {
+
+        const schedule = findSchedule(editingDateKey, editingId);
+
+        if (schedule) {
+
+            const updated = { ...schedule, ...data };
+
+            removeSchedule(editingDateKey, editingId);
+
+            if (!schedules[newDateKey]) {
+                schedules[newDateKey] = [];
+            }
+
+            schedules[newDateKey].push(updated);
+        }
+
+    } else {
+
+        if (!schedules[newDateKey]) {
+            schedules[newDateKey] = [];
+        }
+
+        schedules[newDateKey].push({
+            id: createScheduleId(),
+            ...data,
+            favorite: false
+        });
+    }
 
     saveSchedules();
 
-    scheduleInput.value = "";
-
-    renderScheduleList();
-    createCalendar();
-
-    scheduleInput.focus();
-});
-
-
-// 이전 달
-document.getElementById("prev")
-.addEventListener("click", () => {
-
-    currentDate.setMonth(
-        currentDate.getMonth() - 1
-    );
+    // 일시를 다른 날짜로 바꿨다면 그 날짜 팝업으로 이동
+    if (newDateKey !== selectedDateKey) {
+        openDayPopup(newDateKey);
+    } else {
+        resetForm();
+        renderScheduleList();
+    }
 
     createCalendar();
 });
 
 
-// 다음 달
-document.getElementById("next")
-.addEventListener("click", () => {
+// ---------- 상세 팝업 ----------
 
-    currentDate.setMonth(
-        currentDate.getMonth() + 1
-    );
+function openDetail(dateKey, id) {
 
-    createCalendar();
+    const schedule = findSchedule(dateKey, id);
+
+    if (!schedule) {
+        return;
+    }
+
+    detailRef = { dateKey: dateKey, id: id };
+
+    detailTitle.textContent = schedule.title;
+    detailDatetime.textContent = formatDatetime(schedule.datetime);
+    detailPlace.textContent = schedule.place || "장소 없음";
+    detailContent.textContent = schedule.content || "내용 없음";
+
+    updateDetailFavorite(schedule);
+
+    detailPopup.style.display = "flex";
+}
+
+function updateDetailFavorite(schedule) {
+
+    detailFavorite.textContent = schedule.favorite ? "★" : "☆";
+    detailFavorite.title =
+        schedule.favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
+    detailFavorite.setAttribute("aria-label", detailFavorite.title);
+}
+
+function closeDetailPopup() {
+    detailPopup.style.display = "none";
+    detailRef = null;
+}
+
+detailFavorite.addEventListener("click", () => {
+
+    if (!detailRef) {
+        return;
+    }
+
+    toggleFavorite(detailRef.dateKey, detailRef.id);
 });
 
+detailEdit.addEventListener("click", () => {
 
-// 팝업 닫기
-closePopup.addEventListener("click", () => {
-    popup.style.display = "none";
+    if (!detailRef) {
+        return;
+    }
+
+    startEdit(detailRef.dateKey, detailRef.id);
 });
 
+detailDelete.addEventListener("click", () => {
 
-// 팝업 바깥 클릭으로 닫기
-popup.addEventListener("click", event => {
+    if (!detailRef) {
+        return;
+    }
 
-    if (event.target === popup) {
-        popup.style.display = "none";
+    deleteSchedule(detailRef.dateKey, detailRef.id);
+});
+
+closeDetail.addEventListener("click", closeDetailPopup);
+
+detailPopup.addEventListener("click", event => {
+    if (event.target === detailPopup) {
+        closeDetailPopup();
     }
 });
 
 
-// Enter로 일정 추가
-scheduleInput.addEventListener("keydown", event => {
+// ---------- 화면 갱신 ----------
 
-    if (event.key === "Enter") {
-        saveSchedule.click();
+function refreshViews() {
+
+    createCalendar();
+
+    if (popup.style.display === "flex") {
+        renderScheduleList();
+    }
+
+    if (detailRef) {
+
+        const schedule = findSchedule(detailRef.dateKey, detailRef.id);
+
+        if (schedule) {
+            updateDetailFavorite(schedule);
+        }
+    }
+}
+
+
+// ---------- 이전 / 다음 달, 팝업 닫기 ----------
+
+document.getElementById("prev").addEventListener("click", () => {
+    currentDate.setDate(1);
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    createCalendar();
+});
+
+document.getElementById("next").addEventListener("click", () => {
+    currentDate.setDate(1);
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    createCalendar();
+});
+
+closePopup.addEventListener("click", () => {
+    popup.style.display = "none";
+    resetForm();
+});
+
+popup.addEventListener("click", event => {
+    if (event.target === popup) {
+        popup.style.display = "none";
+        resetForm();
+    }
+});
+
+// ESC로 팝업 닫기 (상세 팝업이 위에 있으면 그것부터)
+document.addEventListener("keydown", event => {
+
+    if (event.key !== "Escape") {
+        return;
+    }
+
+    if (detailPopup.style.display === "flex") {
+        closeDetailPopup();
+    } else if (popup.style.display === "flex") {
+        popup.style.display = "none";
+        resetForm();
     }
 });
 
