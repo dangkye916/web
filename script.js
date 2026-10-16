@@ -27,6 +27,10 @@ const detailContent = document.getElementById("detailContent");
 const detailFavorite = document.getElementById("detailFavorite");
 const detailEdit = document.getElementById("detailEdit");
 const detailDelete = document.getElementById("detailDelete");
+const detailActions = document.getElementById("detailActions");
+
+// 관리자만 일정을 추가·수정·삭제·즐겨찾기 할 수 있음
+const adminMode = Auth.isAdmin();
 
 let currentDate = new Date();
 let selectedDateKey = "";   // 날짜 팝업에서 선택된 날짜
@@ -245,6 +249,9 @@ function openDayPopup(dateKey) {
     resetForm();
     renderScheduleList();
 
+    // 학생에게는 일정 추가/수정 폼을 숨김
+    scheduleForm.hidden = !adminMode;
+
     popup.style.display = "flex";
 }
 
@@ -316,9 +323,21 @@ function renderScheduleList() {
             deleteSchedule(selectedDateKey, schedule.id);
         });
 
-        actions.appendChild(favoriteButton);
-        actions.appendChild(editButton);
-        actions.appendChild(deleteButton);
+        if (adminMode) {
+
+            actions.appendChild(favoriteButton);
+            actions.appendChild(editButton);
+            actions.appendChild(deleteButton);
+
+        } else if (schedule.favorite) {
+
+            // 학생에게는 즐겨찾기 표시만 보여 줌
+            const star = document.createElement("span");
+            star.classList.add("read-star");
+            star.textContent = "★";
+
+            actions.appendChild(star);
+        }
 
         item.appendChild(text);
         item.appendChild(actions);
@@ -331,6 +350,10 @@ function renderScheduleList() {
 // ---------- 즐겨찾기 / 삭제 / 수정 ----------
 
 function toggleFavorite(dateKey, id) {
+
+    if (!adminMode) {
+        return;
+    }
 
     const schedule = findSchedule(dateKey, id);
 
@@ -345,6 +368,10 @@ function toggleFavorite(dateKey, id) {
 }
 
 function deleteSchedule(dateKey, id) {
+
+    if (!adminMode) {
+        return;
+    }
 
     const schedule = findSchedule(dateKey, id);
 
@@ -373,6 +400,10 @@ function deleteSchedule(dateKey, id) {
 }
 
 function startEdit(dateKey, id) {
+
+    if (!adminMode) {
+        return;
+    }
 
     const schedule = findSchedule(dateKey, id);
 
@@ -427,6 +458,10 @@ cancelEdit.addEventListener("click", resetForm);
 scheduleForm.addEventListener("submit", event => {
 
     event.preventDefault();
+
+    if (!adminMode) {
+        return;
+    }
 
     const title = titleInput.value.trim();
 
@@ -503,12 +538,16 @@ function openDetail(dateKey, id) {
 
     detailRef = { dateKey: dateKey, id: id };
 
-    detailTitle.textContent = schedule.title;
+    detailTitle.textContent =
+        (schedule.favorite && !adminMode ? "★ " : "") + schedule.title;
     detailDatetime.textContent = formatDatetime(schedule.datetime);
     detailPlace.textContent = schedule.place || "장소 없음";
     detailContent.textContent = schedule.content || "내용 없음";
 
     updateDetailFavorite(schedule);
+
+    // 학생에게는 수정/삭제/즐겨찾기 버튼을 숨김
+    detailActions.hidden = !adminMode;
 
     detailPopup.style.display = "flex";
 }
@@ -623,6 +662,21 @@ document.addEventListener("keydown", event => {
         resetForm();
     }
 });
+
+
+// 로그인 정보 + 보기 전용/관리자 안내
+Auth.renderUserArea(document.getElementById("userArea"));
+
+const modeNotice = document.getElementById("modeNotice");
+
+if (adminMode) {
+    modeNotice.textContent =
+        "관리자 모드 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요.";
+    modeNotice.classList.add("admin");
+} else {
+    modeNotice.textContent =
+        "보기 전용 · 일정 추가와 수정은 관리자만 할 수 있어요.";
+}
 
 
 // 최초 달력 표시
