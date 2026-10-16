@@ -219,6 +219,396 @@ main {
     transform: none;
 }
 
+/* ---------- 로그인 / 사용자 영역 ---------- */
+
+[hidden] {
+    display: none !important;
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background-color: white;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(79, 140, 247, 0.18);
+}
+
+.role-badge {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background-color: #eef1f6;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.role-badge.admin {
+    background: linear-gradient(135deg, #5b9bff, var(--purple));
+    color: white;
+}
+
+.logout-button {
+    padding: 9px 14px;
+    border: none;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.7);
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.logout-button:hover {
+    background-color: white;
+    color: #d94444;
+}
+
+/* ---------- 로그인 화면 ---------- */
+
+/* 배경 장식 (흐릿한 색 덩어리) */
+.login-page {
+    position: relative;
+    overflow-x: hidden;
+}
+
+.login-page::before,
+.login-page::after {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.login-page::before {
+    width: 380px;
+    height: 380px;
+    top: -90px;
+    left: -90px;
+    background: #9ec5ff;
+}
+
+.login-page::after {
+    width: 440px;
+    height: 440px;
+    right: -110px;
+    bottom: -130px;
+    background: #c9b8ff;
+}
+
+.login-page .site-header,
+.login-page .login-main {
+    position: relative;
+    z-index: 1;
+}
+
+.login-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 20px 20px 48px;
+}
+
+.login-card {
+    width: 440px;
+    max-width: 100%;
+    border-radius: 28px;
+    background-color: white;
+    box-shadow: 0 20px 50px rgba(79, 140, 247, 0.22);
+    overflow: hidden;
+    text-align: center;
+    animation: loginRise 0.5s ease both;
+}
+
+@keyframes loginRise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 위쪽 그라데이션 배너 */
+.login-banner {
+    position: relative;
+    padding: 36px 24px 40px;
+    background: linear-gradient(135deg, #5b9bff, var(--purple));
+    color: white;
+    overflow: hidden;
+}
+
+.login-banner::before,
+.login-banner::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.login-banner::before {
+    width: 170px;
+    height: 170px;
+    top: -65px;
+    right: -45px;
+}
+
+.login-banner::after {
+    width: 120px;
+    height: 120px;
+    left: -35px;
+    bottom: -55px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.login-emoji {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 76px;
+    height: 76px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+    font-size: 38px;
+}
+
+.login-banner h1 {
+    position: relative;
+    margin: 0 0 4px;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+}
+
+.login-banner p {
+    position: relative;
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.92;
+}
+
+.login-body {
+    padding: 28px 28px 32px;
+}
+
+.login-desc {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 학번 만드는 법 안내 */
+.id-guide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.id-guide span {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 58px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    background-color: #f3f7ff;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.id-guide b {
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.2;
+    color: var(--primary-dark);
+}
+
+.id-guide .eq {
+    min-width: 0;
+    padding: 0 2px;
+    background: none;
+    font-size: 20px;
+    font-weight: 700;
+    color: #c2cad8;
+}
+
+.id-guide .result {
+    background: linear-gradient(135deg, #5b9bff, var(--purple));
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.id-guide .result b {
+    color: white;
+}
+
+.login-card form {
+    text-align: center;
+}
+
+.login-card label {
+    display: block;
+    margin: 18px 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a5568;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 16px 14px;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    background-color: #fafcff;
+    font: inherit;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 12px;
+    text-indent: 12px;
+    text-align: center;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.login-card input::placeholder {
+    color: #c9d0dd;
+    font-weight: 500;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(79, 140, 247, 0.18);
+}
+
+.login-error {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: #fdeaea;
+    color: #d94444;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+.login-submit {
+    width: 100%;
+    margin-top: 18px;
+    padding: 15px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #5b9bff, var(--purple));
+    color: white;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(91, 155, 255, 0.45);
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.login-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(91, 155, 255, 0.55);
+}
+
+.login-submit:active {
+    transform: scale(0.98);
+}
+
+.login-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.secondary-button {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 12px;
+    background-color: #eef1f6;
+    color: #4a5568;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.secondary-button:hover {
+    background-color: #dfe4ec;
+}
+
+.login-back {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-dark);
+}
+
+.login-back:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .login-main {
+        padding: 12px 14px 32px;
+    }
+
+    .login-banner {
+        padding: 28px 20px 32px;
+    }
+
+    .login-emoji {
+        width: 64px;
+        height: 64px;
+        font-size: 32px;
+    }
+
+    .login-body {
+        padding: 22px 18px 26px;
+    }
+
+    .id-guide span {
+        min-width: 50px;
+        padding: 6px 8px;
+    }
+
+    .id-guide b {
+        font-size: 17px;
+    }
+
+    .login-card input {
+        font-size: 24px;
+        letter-spacing: 9px;
+        text-indent: 9px;
+    }
+}
+
 /* ---------- 하단 ---------- */
 
 .site-footer {
