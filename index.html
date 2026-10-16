@@ -14,8 +14,8 @@
             <span>학생회</span>
         </a>
 
-        <!-- 로그인 페이지가 만들어지면 <a href="login.html">로 바꾸면 돼요 -->
-        <span class="login-button disabled" aria-disabled="true" title="준비 중">로그인</span>
+        <!-- 로그인 버튼 / 학번 + 로그아웃 (auth.js가 채워 줘요) -->
+        <div id="userArea" class="user-area"></div>
     </header>
 
     <main>
@@ -72,5 +72,9 @@
         © 학생회
     </footer>
 
+    <script src="auth.js"></script>
+    <script>
+        Auth.renderUserArea(document.getElementById("userArea"));
+    </script>
 </body>
 </html>
