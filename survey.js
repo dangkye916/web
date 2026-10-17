@@ -1,5 +1,7 @@
 // ================= 데이터 (서버 연결할 때 이 부분만 바꾸면 돼요) =================
-const MAX_CLASS = 12;
+// 학년별 반 수 (1학년 7반, 2학년 7반, 3학년 8반)
+const CLASS_COUNT = { 1: 7, 2: 7, 3: 8 };
+const range = n => Array.from({ length: n }, (_, i) => i + 1);
 
 function load(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -44,6 +46,11 @@ const app = document.getElementById("app");
 const user = Auth.getUser();
 Auth.renderUserArea(document.getElementById("userArea"));
 
+// 관리 기능(생성·결과·삭제)은 관리자 페이지(admin-survey.html)에서만 켜짐.
+// 메인에서 들어온 설문 페이지는 관리자도 일반 학생과 똑같이 참여해요.
+const MANAGE = window.ADMIN_PAGE === true && Auth.can("survey.create");
+if (window.ADMIN_PAGE === true && !MANAGE) location.replace("index.html");
+
 function h(tag, props = {}, ...kids) {
     const el = document.createElement(tag);
     for (const k in props) {
@@ -72,7 +79,7 @@ function fmt(v) { return v.replace("T", " "); }
 
 function targetText(s) {
     return s.targets.map(t =>
-        `${t.grade}학년 ` + (t.classes.length === MAX_CLASS ? "전체 반" : t.classes.map(c => c + "반").join(", "))
+        `${t.grade}학년 ` + (t.classes.length === CLASS_COUNT[t.grade] ? "전체 반" : t.classes.map(c => c + "반").join(", "))
     ).join(" / ");
 }
 
@@ -90,12 +97,12 @@ function renderList() {
     }
 
     const all = Store.surveys();
-    const visible = user.isAdmin ? all : all.filter(s => isTarget(s, user.id));
+    const visible = MANAGE ? all : all.filter(s => isTarget(s, user.id));
     const tabs = { open: "진행 중", upcoming: "예정", closed: "마감" };
 
     const top = h("div", { class: "survey-top" },
-        h("h1", {}, "설문조사"),
-        user.isAdmin && h("button", { class: "login-submit small", onclick: startCreate }, "＋ 새 설문 만들기"));
+        h("h1", {}, MANAGE ? "설문조사 관리" : "설문조사"),
+        MANAGE && h("button", { class: "login-submit small", onclick: startCreate }, "＋ 새 설문 만들기"));
 
     const tabBar = h("div", { class: "tabs" }, Object.keys(tabs).map(k =>
         h("button", { class: "tab" + (tab === k ? " on" : ""), type: "button",
@@ -108,10 +115,10 @@ function renderList() {
     if (items.length === 0) list.append(h("p", { class: "favorite-empty" }, "해당하는 설문이 없어요."));
 
     items.forEach(s => {
-        const done = !user.isAdmin && Store.participants(s.id).includes(user.id);
+        const done = !MANAGE && Store.participants(s.id).includes(user.id);
         const actions = h("div", { class: "card-actions" });
 
-        if (user.isAdmin) {
+        if (MANAGE) {
             actions.append(
                 h("span", { class: "count" }, `응답 ${Store.responses(s.id).length}명`),
                 h("button", { class: "secondary-button", type: "button", onclick: () => renderResults(s) }, "결과 보기"),
@@ -132,7 +139,7 @@ function renderList() {
     });
 
     show(h("div", {}, top, tabBar, list,
-        user.isAdmin && h("p", { class: "mode-note" }, "생성된 설문은 수정할 수 없어요. 잘못 만들었다면 삭제 후 다시 만들어 주세요.")));
+        MANAGE && h("p", { class: "mode-note" }, "생성된 설문은 수정할 수 없어요. 잘못 만들었다면 삭제 후 다시 만들어 주세요.")));
 }
 
 function removeSurvey(s) {
@@ -148,7 +155,7 @@ function startCreate() {
     if (!Auth.can("survey.create")) return;
     draft = {
         title: "", start: "", end: "", anonymous: true,
-        targets: [{ grade: 1, classes: [] }],
+        targets: [1, 2, 3].map(g => ({ grade: g, classes: range(CLASS_COUNT[g]) })),
         questions: [{ text: "", type: "single", count: 2, options: ["", ""] }]
     };
     renderCreate();
@@ -157,22 +164,33 @@ function startCreate() {
 function renderCreate() {
     const d = draft;
 
-    const targets = h("div", {}, d.targets.map((t, ti) =>
-        h("div", { class: "target-row" },
+    // 종료는 시작 이후만 선택 가능
+    const endInput = h("input", { type: "datetime-local", value: d.end, min: d.start || false,
+        oninput: e => { d.end = e.target.value; } });
+    const startInput = h("input", { type: "datetime-local", value: d.start, oninput: e => {
+        d.start = e.target.value;
+        endInput.min = d.start;
+        if (d.end && d.end <= d.start) { d.end = ""; endInput.value = ""; }
+    } });
+
+    // 1·2·3학년이 항상 보이고, 처음엔 모든 반이 선택된 상태
+    const targets = h("div", {}, d.targets.map(t => {
+        const total = CLASS_COUNT[t.grade];
+        const allOn = t.classes.length === total;
+        return h("div", { class: "target-row" },
             h("div", { class: "row" },
-                h("select", { onchange: e => { t.grade = Number(e.target.value); } },
-                    [1, 2, 3].map(g => h("option", { value: g, selected: t.grade === g }, `${g}학년`))),
+                h("strong", {}, `${t.grade}학년`),
                 h("button", { class: "secondary-button", type: "button", onclick: () => {
-                    t.classes = t.classes.length === MAX_CLASS ? [] : Array.from({ length: MAX_CLASS }, (_, i) => i + 1);
+                    t.classes = allOn ? [] : range(total);
                     renderCreate();
-                } }, t.classes.length === MAX_CLASS ? "전체 반 해제" : "전체 반 선택"),
-                d.targets.length > 1 && h("button", { class: "danger-button", type: "button", onclick: () => { d.targets.splice(ti, 1); renderCreate(); } }, "대상 삭제")),
-            h("div", { class: "chips" }, Array.from({ length: MAX_CLASS }, (_, i) => i + 1).map(c =>
+                } }, allOn ? "전체 반 해제" : "전체 반 선택")),
+            h("div", { class: "chips" }, range(total).map(c =>
                 h("label", { class: "chip" },
                     h("input", { type: "checkbox", checked: t.classes.includes(c), onchange: e => {
                         t.classes = e.target.checked ? [...t.classes, c].sort((a, b) => a - b) : t.classes.filter(x => x !== c);
                         renderCreate();
-                    } }), `${c}반`))))));
+                    } }), `${c}반`))));
+    }));
 
     const questions = h("div", {}, d.questions.map((q, qi) =>
         h("div", { class: "q-box" },
@@ -196,15 +214,14 @@ function renderCreate() {
         h("label", {}, "제목"),
         h("input", { type: "text", value: d.title, maxlength: 100, oninput: e => { d.title = e.target.value; } }),
         h("div", { class: "row two" },
-            h("div", {}, h("label", {}, "시작"), h("input", { type: "datetime-local", value: d.start, oninput: e => { d.start = e.target.value; } })),
-            h("div", {}, h("label", {}, "종료"), h("input", { type: "datetime-local", value: d.end, oninput: e => { d.end = e.target.value; } }))),
+            h("div", {}, h("label", {}, "시작"), startInput),
+            h("div", {}, h("label", {}, "종료 (시작 이후만 선택 가능)"), endInput)),
         h("label", {}, "설문 방식"),
         h("select", { onchange: e => { d.anonymous = e.target.value === "1"; } },
             h("option", { value: "1", selected: d.anonymous }, "익명 (기본)"),
             h("option", { value: "0", selected: !d.anonymous }, "기명 (이름·학번 입력받음)")),
-        h("label", {}, "대상 (학년마다 반을 따로 고를 수 있어요)"),
+        h("label", {}, "대상 (학년별로 반을 고를 수 있어요)"),
         targets,
-        h("button", { class: "secondary-button", type: "button", onclick: () => { d.targets.push({ grade: 1, classes: [] }); renderCreate(); } }, "＋ 대상 추가"),
         h("label", {}, "질문"),
         questions,
         h("button", { class: "secondary-button", type: "button", onclick: () => { d.questions.push({ text: "", type: "single", count: 2, options: ["", ""] }); renderCreate(); } }, "＋ 질문 추가"),
@@ -221,7 +238,7 @@ function submitCreate(event) {
     if (!d.title.trim()) return fail("제목을 입력해 주세요.");
     if (!d.start || !d.end) return fail("시작과 종료 일시를 모두 입력해 주세요.");
     if (new Date(d.end) <= new Date(d.start)) return fail("종료 일시는 시작 일시보다 늦어야 해요.");
-    if (d.targets.some(t => t.classes.length === 0)) return fail("대상마다 반을 한 개 이상 선택해 주세요.");
+    if (d.targets.every(t => t.classes.length === 0)) return fail("대상 반을 한 개 이상 선택해 주세요.");
 
     const questions = [];
     for (const [i, q] of d.questions.entries()) {
@@ -249,7 +266,7 @@ function submitCreate(event) {
         Store.create({
             id: `${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
             title: d.title.trim(), start: d.start, end: d.end, anonymous: d.anonymous,
-            targets: d.targets.map(t => ({ grade: t.grade, classes: t.classes })),
+            targets: d.targets.filter(t => t.classes.length > 0).map(t => ({ grade: t.grade, classes: t.classes })),
             questions
         });
     } catch (e) { return fail(e.message); }
