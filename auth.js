@@ -1,93 +1,137 @@
-// 테스트용 프런트엔드 인증입니다. 실제 운영 전에는 서버 측 인증/DB 권한 규칙으로 교체해야 합니다.
+// 학번 로그인 / 관리자 인증 / 권한 검사 (모든 페이지 공통)
 const Auth = (() => {
-    const ADMIN_ID = "20304";
-    const TEST_PASSWORD = "stella59!!";
-    // 공개 코드에 포함되므로 실제 운영 비밀번호로 사용 금지
-    const STUDENT_ID_PATTERN = /^\d{5}$/;
-    const USER_KEY = "currentStudentId";
-    const ADMIN_SESSION_KEY = "testAdminAuthenticated";
 
-    const normalize = id => String(id ?? "").trim();
-    function isValidId(id) {
-        return STUDENT_ID_PATTERN.test(normalize(id));
+    // ★ 테스트용! 비밀번호가 코드에 그대로 들어 있어요. 서버 연결할 때 서버로 옮길 것.
+    const ADMINS = {
+        "20304": { password: "stella59!!", role: "super" }
+    };
+
+    // 역할별 권한 (지금은 최고 관리자만)
+    const PERMISSIONS = {
+        super: ["calendar.edit", "survey.create", "survey.delete", "survey.results", "admin.manage"]
+    };
+
+    const STUDENT_ID_PATTERN = /^\d{5}$/;
+    const ID_KEY = "currentStudentId";
+    const ADMIN_KEY = "adminVerifiedId"; // 비밀번호까지 통과한 관리자 학번
+
+    function normalize(id) { return String(id ?? "").trim(); }
+    function isValidId(id) { return STUDENT_ID_PATTERN.test(normalize(id)); }
+    function isAdminId(id) { return Object.prototype.hasOwnProperty.call(ADMINS, normalize(id)); }
+
+    // 학번 → 학년/반/번호 (10101 → 1학년 1반 1번)
+    function parseId(id) {
+        const s = normalize(id);
+        return { grade: Number(s[0]), cls: Number(s.slice(1, 3)), num: Number(s.slice(3, 5)) };
     }
+
+    // 1단계: 학번 입력 → "invalid" | "need_password" | "ok" | "error"
     function login(id) {
         const studentId = normalize(id);
-        if (!isValidId(studentId)) return false;
+        if (!isValidId(studentId)) return "invalid";
+        if (isAdminId(studentId)) return "need_password"; // 아직 저장 안 함
         try {
-            localStorage.setItem(USER_KEY, studentId);
-            sessionStorage.removeItem(ADMIN_SESSION_KEY);
-            return true;
-        }
-        catch {
-            return false;
-        }
-    }
-    function verifyAdminPassword(password) {
-        const user = getUser();
-        if (!user || user.id !== ADMIN_ID || password !== TEST_PASSWORD) return false;
-        sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-        return true;
-    }
-    function logout() {
-        try {
-            localStorage.removeItem(USER_KEY);
-            sessionStorage.removeItem(ADMIN_SESSION_KEY);
-        }
-        catch {}
-    }
-    function getUser() {
-        let id;
-        try {
-            id = localStorage.getItem(USER_KEY);
-        }
-        catch {
-            return null;
-        }
-        if (!id || !isValidId(id)) return null;
-        const isAdmin = id === ADMIN_ID && sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-        return {
-            id, isAdmin, isSuperAdmin: isAdmin
-        };
-    }
-    function isAdmin() {
-        return Boolean(getUser()?.isAdmin);
-    }
-    function isValidIdPublic(id) {
-        return isValidId(id);
+            localStorage.setItem(ID_KEY, studentId);
+            localStorage.removeItem(ADMIN_KEY);
+        } catch (e) { return "error"; }
+        return "ok";
     }
 
+    // 2단계: 관리자 비밀번호 → "ok" | "wrong" | "error"
+    function loginAdmin(id, password) {
+        const studentId = normalize(id);
+        const admin = ADMINS[studentId];
+        if (!admin || admin.password !== String(password ?? "")) return "wrong";
+        try {
+            localStorage.setItem(ID_KEY, studentId);
+            localStorage.setItem(ADMIN_KEY, studentId);
+        } catch (e) { return "error"; }
+        return "ok";
+    }
+
+    function logout() {
+        try {
+            localStorage.removeItem(ID_KEY);
+            localStorage.removeItem(ADMIN_KEY);
+        } catch (e) { /* 무시 */ }
+    }
+
+    // 현재 사용자 { id, isAdmin, role } 또는 null
+    function getUser() {
+        let id = null, verified = null;
+        try {
+            id = localStorage.getItem(ID_KEY);
+            verified = localStorage.getItem(ADMIN_KEY);
+        } catch (e) { return null; }
+
+        if (!id || !isValidId(id)) return null;
+
+        const isAdmin = isAdminId(id) && verified === id;
+        // 관리자 학번인데 비밀번호를 통과 못 했으면 로그인 안 된 걸로 처리
+        if (isAdminId(id) && !isAdmin) return null;
+
+        return { id, isAdmin, role: isAdmin ? ADMINS[id].role : "student" };
+    }
+
+    function isAdmin() {
+        const user = getUser();
+        return Boolean(user && user.isAdmin);
+    }
+
+    // 권한 검사: Auth.can("survey.create")
+    function can(permission) {
+        const user = getUser();
+        if (!user || !user.isAdmin) return false;
+        return (PERMISSIONS[user.role] || []).includes(permission);
+    }
+
+    // 오른쪽 위 사용자 영역
     function renderUserArea(container) {
         if (!container) return;
-        container.replaceChildren();
+        container.innerHTML = "";
+
         const user = getUser();
+
         if (!user) {
             const a = document.createElement("a");
             a.className = "login-button";
             a.href = "login.html";
             a.textContent = "로그인";
-            container.append(a);
+            container.appendChild(a);
             return;
         }
+
+        if (user.isAdmin) {
+            const adminLink = document.createElement("a");
+            adminLink.className = "login-button";
+            adminLink.href = "admin.html";
+            adminLink.textContent = "관리자 페이지";
+            container.appendChild(adminLink);
+        }
+
         const chip = document.createElement("span");
         chip.className = "user-chip";
+
         const idText = document.createElement("span");
         idText.textContent = user.id;
+
         const badge = document.createElement("span");
         badge.className = "role-badge" + (user.isAdmin ? " admin" : "");
-        badge.textContent = user.isAdmin ? "최고 관리자" : "학생";
-        chip.append(idText, badge);
-        const logoutButton = document.createElement("button");
-        logoutButton.type = "button";
-        logoutButton.className = "logout-button";
-        logoutButton.textContent = "로그아웃";
-        logoutButton.addEventListener("click", () => {
-            logout();
-            location.href = "index.html";
-        });
-        container.append(chip, logoutButton);
+        badge.textContent = user.isAdmin ? "관리자" : "학생";
+
+        chip.appendChild(idText);
+        chip.appendChild(badge);
+
+        const out = document.createElement("button");
+        out.type = "button";
+        out.className = "logout-button";
+        out.textContent = "로그아웃";
+        out.addEventListener("click", () => { logout(); location.reload(); });
+
+        container.appendChild(chip);
+        container.appendChild(out);
     }
-    return {
-        login, logout, getUser, isAdmin, isValidId: isValidIdPublic, verifyAdminPassword, renderUserArea
-    };
+
+    return { login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea };
+
 })();
