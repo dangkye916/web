@@ -646,3 +646,21 @@ button:active {
         flex-wrap: wrap;
     }
 }
+
+/* 일정 상세의 링크 버튼 (인스타 게시물 등) */
+.detail-link {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #5b9bff, #7c6cf0);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(91, 155, 255, 0.4);
+}
+
+.detail-link:hover {
+    box-shadow: 0 6px 16px rgba(91, 155, 255, 0.55);
+}
