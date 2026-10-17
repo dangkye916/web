@@ -1,211 +1,193 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학생회 웹사이트</title>
-    <link rel="stylesheet" href="main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학생회 웹사이트</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="main-additions.css">
 </head>
 <body>
+  <header class="site-header">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">🎓</span>
+      <span>학생회</span>
+    </a>
+    <div id="userArea" class="user-area"></div>
+  </header>
 
-    <header class="site-header">
-        <a class="logo" href="index.html">
-            <span class="logo-mark">🎓</span>
-            <span>학생회</span>
-        </a>
+  <main>
+    <section class="hero">
+      <h1>학생회 웹사이트에 오신 것을 환영합니다</h1>
+      <p>학교생활에 필요한 일정과 소식을 한곳에서 확인해 봐.</p>
+    </section>
 
-        <!-- 로그인 버튼 / 학번 + 로그아웃 (auth.js가 채워 줘요) -->
-        <div id="userArea" class="user-area"></div>
-    </header>
+    <nav class="menu" aria-label="주요 메뉴">
+      <a class="menu-card" href="calendar.html">
+        <span class="menu-icon icon-calendar">📅</span>
+        <span class="menu-text">
+          <h2>캘린더</h2>
+          <p>학생회 일정을 확인하고 즐겨찾기해.</p>
+        </span>
+        <span class="menu-arrow">›</span>
+      </a>
 
-    <main>
-        <section class="hero">
-            <h1>학생회 웹사이트에 오신 것을 환영합니다</h1>
-            <p>일정 확인부터 학교 규정, 축제 부스 예약, 투표까지<br>한 곳에서 편하게 이용해 보세요.</p>
-        </section>
+      <!-- 다른 친구들이 만드는 교칙·부스 코드는 건드리지 않음 -->
+      <div class="menu-card disabled" aria-disabled="true">
+        <span class="menu-icon icon-rules">📖</span>
+        <span class="menu-text">
+          <h2>학교 규정 정리</h2>
+          <p>학교 규정을 한눈에 확인해.</p>
+        </span>
+        <span class="badge">준비 중</span>
+      </div>
 
-        <nav class="menu" aria-label="주요 메뉴">
+      <div class="menu-card disabled" aria-disabled="true">
+        <span class="menu-icon icon-booth">🎪</span>
+        <span class="menu-text">
+          <h2>축제 부스 예약</h2>
+          <p>축제 부스 예약을 확인해.</p>
+        </span>
+        <span class="badge">준비 중</span>
+      </div>
 
-            <!-- 캘린더: 연결됨 -->
-            <a class="menu-card" href="calendar.html">
-                <span class="menu-icon icon-calendar">📅</span>
-                <span class="menu-text">
-                    <h2>캘린더</h2>
-                    <p>학생회 일정을 확인하고 추가해요</p>
-                </span>
-                <span class="menu-arrow">›</span>
-            </a>
+      <a class="menu-card" href="survey.html">
+        <span class="menu-icon icon-vote">📋</span>
+        <span class="menu-text">
+          <h2>설문조사</h2>
+          <p>진행 중인 설문에 참여해.</p>
+        </span>
+        <span class="menu-arrow">›</span>
+      </a>
+    </nav>
 
-            <!-- 아래 기능들은 페이지가 만들어지면 <div>를 <a href="...">로 바꾸고
-                 disabled 클래스와 badge를 빼면 돼요 -->
-            <div class="menu-card disabled" aria-disabled="true">
-                <span class="menu-icon icon-rules">📖</span>
-                <span class="menu-text">
-                    <h2>학교 규정 정리</h2>
-                    <p>학교 규정을 한눈에 찾아봐요</p>
-                </span>
-                <span class="badge">준비 중</span>
-            </div>
+    <section class="favorites" aria-labelledby="favoritesTitle">
+      <h2 id="favoritesTitle">⭐ 즐겨찾기한 일정</h2>
+      <ul id="favoriteList" class="favorite-list"></ul>
+      <p id="favoriteEmpty" class="favorite-empty" hidden></p>
+    </section>
 
-            <div class="menu-card disabled" aria-disabled="true">
-                <span class="menu-icon icon-booth">🎪</span>
-                <span class="menu-text">
-                    <h2>축제 부스 예약</h2>
-                    <p>축제 부스를 신청하고 예약해요</p>
-                </span>
-                <span class="badge">준비 중</span>
-            </div>
+    <section class="external-links" id="externalLinks" hidden>
+      <a class="external-link" id="instagramLink"
+         target="_blank" rel="noopener noreferrer" hidden>
+        <span>◎</span> 학생회 인스타그램 ↗
+      </a>
+      <a class="external-link" id="schoolLink"
+         target="_blank" rel="noopener noreferrer" hidden>
+        <span>⌂</span> 학교 공식 사이트 ↗
+      </a>
+    </section>
 
-            <div class="menu-card disabled" aria-disabled="true">
-                <span class="menu-icon icon-vote">🗳️</span>
-                <span class="menu-text">
-                    <h2>투표</h2>
-                    <p>진행 중인 투표에 참여해요</p>
-                </span>
-                <span class="badge">준비 중</span>
-            </div>
+    <div id="adminShortcut" hidden>
+      <a class="admin-shortcut" href="admin.html">⚙ 관리자 대시보드</a>
+    </div>
+  </main>
 
-        </nav>
+  <footer class="site-footer">© 학생회 · 함께 만드는 학교생활</footer>
 
-        <!-- 즐겨찾기한 일정 (지나간 일정은 제외, 날짜순) -->
-        <section class="favorites" aria-labelledby="favoritesTitle">
-            <h2 id="favoritesTitle">⭐ 즐겨찾기한 일정</h2>
-            <ul id="favoriteList" class="favorite-list"></ul>
-            <p id="favoriteEmpty" class="favorite-empty" hidden></p>
-        </section>
-    </main>
+  <script src="auth.js"></script>
+  <script>
+    Auth.renderUserArea(document.getElementById("userArea"));
 
-    <footer class="site-footer">
-        © 학생회
-    </footer>
+    const user = Auth.getUser();
+    document.getElementById("adminShortcut").hidden = !user?.isAdmin;
 
-    <script src="auth.js"></script>
-    <script>
-        Auth.renderUserArea(document.getElementById("userArea"));
+    const links = JSON.parse(
+      localStorage.getItem("councilExternalLinks") ||
+      '{"instagram":"","school":""}'
+    );
 
-        // ---------- 즐겨찾기한 일정 ----------
+    function setExternalLink(id, value) {
+      const element = document.getElementById(id);
+      if (!value) return;
+      try {
+        const url = new URL(value);
+        if (!["https:", "http:"].includes(url.protocol)) return;
+        element.href = url.href;
+        element.hidden = false;
+        document.getElementById("externalLinks").hidden = false;
+      } catch {}
+    }
 
-        function pad(number) {
-            return String(number).padStart(2, "0");
-        }
+    setExternalLink("instagramLink", links.instagram);
+    setExternalLink("schoolLink", links.school);
 
-        function renderFavorites() {
+    function pad(n) { return String(n).padStart(2, "0"); }
 
-            const list = document.getElementById("favoriteList");
-            const empty = document.getElementById("favoriteEmpty");
+    function renderFavorites() {
+      const list = document.getElementById("favoriteList");
+      const empty = document.getElementById("favoriteEmpty");
+      list.replaceChildren();
+      empty.hidden = true;
 
-            list.innerHTML = "";
-            empty.hidden = true;
+      if (!user) {
+        empty.textContent = "로그인하면 즐겨찾기한 일정을 볼 수 있어.";
+        empty.hidden = false;
+        return;
+      }
 
-            const user = Auth.getUser();
+      let favoriteIds = [];
+      let schedules = {};
 
-            // 로그인 안 했으면 안내만 표시
-            if (!user) {
-                empty.textContent = "로그인하면 즐겨찾기한 일정을 볼 수 있어요.";
-                empty.hidden = false;
-                return;
-            }
+      try {
+        favoriteIds = JSON.parse(
+          localStorage.getItem(`favoriteIds_${user.id}`) || "[]"
+        );
+        schedules = JSON.parse(
+          localStorage.getItem("schedules") || "{}"
+        );
+      } catch {}
 
-            // 내 즐겨찾기 ID 목록 (calendar 페이지에서 저장한 값)
-            let favoriteIds = [];
+      const now = new Date();
+      const today =
+        `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+      const items = [];
 
-            try {
-                const saved = JSON.parse(
-                    localStorage.getItem(`favoriteIds_${user.id}`)
-                );
+      for (const dateKey in schedules) {
+        if (!Array.isArray(schedules[dateKey])) continue;
 
-                if (Array.isArray(saved)) {
-                    favoriteIds = saved;
-                }
-            } catch (error) {
-                // 값이 깨졌으면 빈 목록으로 처리
-            }
+        schedules[dateKey].forEach(item => {
+          if (!item || !favoriteIds.includes(item.id)) return;
 
-            const favoriteSet = new Set(favoriteIds);
+          const datetime = item.datetime || dateKey;
+          const date = datetime.slice(0, 10);
+          if (date < today) return;
 
-            // 전체 일정
-            let schedules = {};
+          items.push({
+            date,
+            datetime,
+            title: item.title || item.text || ""
+          });
+        });
+      }
 
-            try {
-                schedules = JSON.parse(localStorage.getItem("schedules")) || {};
-            } catch (error) {
-                schedules = {};
-            }
+      items.sort((a,b) => a.datetime.localeCompare(b.datetime));
 
-            // 오늘 날짜 (YYYY-MM-DD)
-            const now = new Date();
-            const todayKey =
-                `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      if (!items.length) {
+        empty.textContent = "즐겨찾기한 일정이 없어.";
+        empty.hidden = false;
+        return;
+      }
 
-            const items = [];
+      items.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "favorite-item";
 
-            for (const dateKey in schedules) {
+        const date = document.createElement("span");
+        date.className = "favorite-date";
+        date.textContent = item.date;
 
-                const dayList = schedules[dateKey];
+        const title = document.createElement("span");
+        title.className = "favorite-title";
+        title.textContent = item.title;
 
-                if (!Array.isArray(dayList)) {
-                    continue;
-                }
+        li.append(date, title);
+        list.append(li);
+      });
+    }
 
-                dayList.forEach(item => {
-
-                    if (!item || typeof item !== "object" || !favoriteSet.has(item.id)) {
-                        return;
-                    }
-
-                    const datetime = item.datetime || dateKey;
-                    const date = datetime.slice(0, 10);
-
-                    // 지나간 일정(어제까지)은 표시하지 않음 — 오늘 일정은 표시
-                    if (date < todayKey) {
-                        return;
-                    }
-
-                    items.push({
-                        datetime: datetime,
-                        date: date,
-                        title: item.title ?? item.text ?? ""
-                    });
-                });
-            }
-
-            if (items.length === 0) {
-                empty.textContent = "즐겨찾기한 일정이 없습니다.";
-                empty.hidden = false;
-                return;
-            }
-
-            // 날짜순 정렬
-            items.sort((a, b) => a.datetime.localeCompare(b.datetime));
-
-            items.forEach(item => {
-
-                const [year, month, day] = item.date.split("-");
-
-                // 올해가 아니면 연도도 같이 표시
-                const dateText =
-                    (Number(year) !== now.getFullYear() ? `${year}년 ` : "") +
-                    `${Number(month)}월 ${Number(day)}일`;
-
-                const row = document.createElement("li");
-                row.className = "favorite-item";
-
-                const dateElement = document.createElement("span");
-                dateElement.className = "favorite-date";
-                dateElement.textContent = dateText;
-
-                const titleElement = document.createElement("span");
-                titleElement.className = "favorite-title";
-                titleElement.textContent = item.title;
-
-                row.appendChild(dateElement);
-                row.appendChild(titleElement);
-
-                list.appendChild(row);
-            });
-        }
-
-        renderFavorites();
-    </script>
+    renderFavorites();
+  </script>
 </body>
 </html>
