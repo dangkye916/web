@@ -1,77 +1,68 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - 학생회</title>
-    <link rel="stylesheet" href="main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - 학생회</title>
+  <link rel="stylesheet" href="main.css">
 </head>
 <body class="login-page">
+  <header class="site-header">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">🎓</span><span>학생회</span>
+    </a>
+  </header>
 
-    <header class="site-header">
-        <a class="logo" href="index.html">
-            <span class="logo-mark">🎓</span>
-            <span>학생회</span>
-        </a>
-    </header>
+  <main class="login-main">
+    <section class="login-card">
+      <div class="login-banner">
+        <div class="login-emoji">🔑</div>
+        <h1>로그인</h1>
+        <p>학번으로 학생회 웹사이트를 이용해 봐.</p>
+      </div>
 
-    <div class="login-main">
-        <section class="login-card">
+      <div class="login-body">
+        <div id="loginView">
+          <p class="login-desc">학번 5자리를 입력해 줘.</p>
+          <form id="loginForm">
+            <label for="studentId">학번</label>
+            <input id="studentId" inputmode="numeric"
+                   maxlength="5" placeholder="•••••" required>
+            <p id="loginError" class="login-error" hidden></p>
+            <button class="login-submit" type="submit">로그인</button>
+          </form>
+        </div>
 
-            <div class="login-banner">
-                <div class="login-emoji">🔑</div>
-                <h1>로그인</h1>
-                <p>학번으로 간편하게 시작해요</p>
-            </div>
+        <div id="adminPasswordView" hidden>
+          <p class="login-desc">관리자 인증이 필요해.</p>
+          <form id="adminPasswordForm">
+            <label for="adminPassword">관리자 비밀번호</label>
+            <input id="adminPassword" type="password"
+                   autocomplete="current-password"
+                   placeholder="비밀번호 입력" required>
+            <button class="login-submit" type="submit">관리자 로그인</button>
+            <button class="secondary-button" type="button"
+                    id="backToId" style="margin-top:10px">
+              학번 다시 입력
+            </button>
+          </form>
+        </div>
 
-            <div class="login-body">
+        <div id="loggedInView" hidden>
+          <p class="login-desc" id="loggedInText"></p>
+          <div class="login-actions">
+            <a class="home-button" href="index.html">메인으로</a>
+            <button type="button" id="logoutButton"
+                    class="secondary-button">로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <a class="login-back" href="index.html">← 메인으로 돌아가기</a>
+  </main>
 
-                <!-- 로그인 전 -->
-                <div id="loginView">
-                    <p class="login-desc">내 학번은 이렇게 만들어요</p>
-
-                    <div class="id-guide" aria-label="학번 구성 예시">
-                        <span><b>1</b>학년</span>
-                        <span><b>01</b>반</span>
-                        <span><b>01</b>번</span>
-                        <span class="eq">=</span>
-                        <span class="result"><b>10101</b>학번</span>
-                    </div>
-
-                    <form id="loginForm" autocomplete="off">
-                        <label for="studentId">학번 5자리</label>
-                        <input
-                            type="text"
-                            id="studentId"
-                            inputmode="numeric"
-                            maxlength="5"
-                            placeholder="•••••"
-                        >
-
-                        <p id="loginError" class="login-error" hidden></p>
-
-                        <button type="submit" class="login-submit">로그인</button>
-                    </form>
-                </div>
-
-                <!-- 이미 로그인한 상태 -->
-                <div id="loggedInView" hidden>
-                    <p class="login-desc" id="loggedInText"></p>
-
-                    <div class="login-actions">
-                        <a class="home-button" href="index.html">메인으로</a>
-                        <button type="button" id="logoutButton" class="secondary-button">로그아웃</button>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
-
-        <a class="login-back" href="index.html">← 메인으로 돌아가기</a>
-    </div>
-
-    <script src="auth.js"></script>
-    <script src="login.js"></script>
+  <script src="auth.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>
