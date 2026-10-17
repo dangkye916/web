@@ -1,4 +1,3 @@
-
 const monthElement = document.getElementById("month");
 const daysElement = document.getElementById("days");
 
@@ -354,7 +353,7 @@ function openDayPopup(dateKey) {
     renderScheduleList();
 
     // 학생에게는 일정 추가/수정 폼을 숨김
-    scheduleForm.hidden = !Auth.isAdmin();
+    scheduleForm.hidden = !adminMode;
 
     popup.style.display = "flex";
 }
@@ -474,7 +473,7 @@ function toggleFavorite(dateKey, id) {
 
 function deleteSchedule(dateKey, id) {
 
-    if (!Auth.isAdmin()) {
+    if (!adminMode) {
         return;
     }
 
@@ -511,7 +510,7 @@ function deleteSchedule(dateKey, id) {
 
 function startEdit(dateKey, id) {
 
-    if (!Auth.isAdmin()) {
+    if (!adminMode) {
         return;
     }
 
@@ -571,8 +570,7 @@ scheduleForm.addEventListener("submit", event => {
 
     event.preventDefault();
 
-    if (!Auth.isAdmin()) {
-        alert("일정 추가·수정은 최고 관리자만 할 수 있어.");
+    if (!adminMode) {
         return;
     }
 
@@ -697,9 +695,9 @@ function openDetail(dateKey, id) {
 
     // 즐겨찾기 버튼: 로그인한 사람만 / 수정·삭제 버튼: 관리자만
     detailFavorite.hidden = !canFavorite;
-    detailEdit.hidden = !Auth.isAdmin();
-    detailDelete.hidden = !Auth.isAdmin();
-    detailActions.hidden = !canFavorite && !Auth.isAdmin();
+    detailEdit.hidden = !adminMode;
+    detailDelete.hidden = !adminMode;
+    detailActions.hidden = !canFavorite && !adminMode;
 
     detailPopup.style.display = "flex";
 }
