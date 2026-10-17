@@ -87,7 +87,13 @@ function targetText(s) {
 let tab = "open";
 let draft = null;
 
-function show(node) { app.innerHTML = ""; app.append(node); window.scrollTo(0, 0); }
+// keepScroll이 true면 화면을 다시 그려도 스크롤 위치를 그대로 유지해요 (설문 만들기 화면용)
+function show(node, keepScroll = false) {
+    const y = window.scrollY;
+    app.innerHTML = "";
+    app.append(node);
+    window.scrollTo(0, keepScroll ? y : 0);
+}
 
 function renderList() {
     if (!user) {
@@ -228,7 +234,7 @@ function renderCreate() {
         h("button", { class: "secondary-button", type: "button", onclick: () => { d.questions.push({ text: "", type: "single", count: 2, options: ["", ""] }); renderCreate(); } }, "＋ 질문 추가"),
         h("div", { class: "row" },
             h("button", { class: "login-submit", type: "submit" }, "설문 만들기"),
-            h("button", { class: "secondary-button", type: "button", onclick: renderList }, "취소"))));
+            h("button", { class: "secondary-button", type: "button", onclick: renderList }, "취소"))), true);
 }
 
 function submitCreate(event) {
