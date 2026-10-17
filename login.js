@@ -5,78 +5,93 @@ const loginForm = document.getElementById("loginForm");
 const studentIdInput = document.getElementById("studentId");
 const loginError = document.getElementById("loginError");
 const logoutButton = document.getElementById("logoutButton");
+const submitButton = loginForm.querySelector(".login-submit");
 
-let pendingAdminId = false;
-let passwordView = document.getElementById("adminPasswordView");
+// 비밀번호 단계 UI (login.html 수정 없이 JS로 만들어 줌)
+const passwordBlock = document.createElement("div");
+passwordBlock.hidden = true;
+passwordBlock.innerHTML =
+    '<label for="adminPassword">관리자 비밀번호</label>' +
+    '<input type="password" id="adminPassword" autocomplete="current-password" ' +
+    'style="letter-spacing:2px;text-indent:0;font-size:20px">' +
+    '<button type="button" id="backToId" class="secondary-button" ' +
+    'style="margin-top:12px">← 학번 다시 입력</button>';
+loginForm.insertBefore(passwordBlock, loginError);
+
+const passwordInput = passwordBlock.querySelector("#adminPassword");
+const backButton = passwordBlock.querySelector("#backToId");
+
+let passwordStep = false; // 지금 비밀번호 단계인지
+
+function setStep(isPassword) {
+    passwordStep = isPassword;
+    passwordBlock.hidden = !isPassword;
+    studentIdInput.readOnly = isPassword;
+    submitButton.textContent = isPassword ? "관리자 로그인" : "로그인";
+    loginError.hidden = true;
+    passwordInput.value = "";
+    if (isPassword) passwordInput.focus(); else studentIdInput.focus();
+}
+
+function showView() {
+    const user = Auth.getUser();
+    if (user) {
+        loginView.hidden = true;
+        loggedInView.hidden = false;
+        loggedInText.textContent =
+            `${user.id}(${user.isAdmin ? "관리자" : "학생"})으로 로그인되어 있어요.`;
+    } else {
+        loginView.hidden = false;
+        loggedInView.hidden = true;
+        setStep(false);
+    }
+}
 
 function showError(message) {
     loginError.textContent = message;
     loginError.hidden = false;
 }
-function showView() {
-    const user = Auth.getUser();
-    if (user) {
-        loginView.hidden = true;
-        if (passwordView) passwordView.hidden = true;
-        loggedInView.hidden = false;
-        loggedInText.textContent = `${user.id}(${user.isAdmin ? "최고 관리자" : "학생"})으로 로그인되어 있어요.`;
-        let link = document.getElementById("adminDashboardLink");
-        if (user.isAdmin && !link) {
-            link = document.createElement("a");
-            link.id = "adminDashboardLink";
-            link.className = "home-button";
-            link.href = "admin.html";
-            link.textContent = "관리자 화면";
-            document.querySelector(".login-actions")?.prepend(link);
-        } else if (!user.isAdmin) link?.remove();
-    }
-    else {
-        loginView.hidden = false;
-        if (passwordView) passwordView.hidden = true;
-        loggedInView.hidden = true;
-        studentIdInput?.focus();
-    }
-}
-studentIdInput?.addEventListener("input", () => {
+
+studentIdInput.addEventListener("input", () => {
     studentIdInput.value = studentIdInput.value.replace(/\D/g, "");
     loginError.hidden = true;
 });
-loginForm?.addEventListener("submit", event => {
+
+backButton.addEventListener("click", () => setStep(false));
+
+loginForm.addEventListener("submit", event => {
     event.preventDefault();
-    const id = studentIdInput.value.trim();
-    if (!id) return showError("학번을 입력해 줘.");
-    if (!Auth.isValidId(id)) return showError("학번은 5자리 숫자로 입력해 줘.");
-    if (id === "20304") {
-        pendingAdminId = true;
-        loginView.hidden = true;
-        passwordView.hidden = false;
-        document.getElementById("adminPassword")?.focus();
+    const studentId = studentIdInput.value.trim();
+
+    // ---- 2단계: 관리자 비밀번호 ----
+    if (passwordStep) {
+        const result = Auth.loginAdmin(studentId, passwordInput.value);
+        if (result === "ok") { location.href = "index.html"; return; }
+        showError(result === "wrong"
+            ? "비밀번호가 맞지 않아요. 다시 입력해 주세요."
+            : "이 브라우저에서는 로그인 정보를 저장할 수 없어요.");
+        passwordInput.select();
         return;
     }
-    if (!Auth.login(id)) return showError("로그인 정보를 저장할 수 없어. 브라우저 설정을 확인해 줘.");
+
+    // ---- 1단계: 학번 ----
+    if (studentId === "") { showError("학번을 입력해 주세요."); return; }
+
+    const result = Auth.login(studentId);
+
+    if (result === "invalid") { showError("학번은 5자리 숫자로 입력해 주세요."); return; }
+    if (result === "error") {
+        showError("이 브라우저에서는 로그인 정보를 저장할 수 없어요. 쿠키/사이트 데이터 차단 설정을 확인해 주세요.");
+        return;
+    }
+    if (result === "need_password") { setStep(true); return; }
+
     location.href = "index.html";
 });
-document.getElementById("adminPasswordForm")?.addEventListener("submit", event => {
-    event.preventDefault();
-    if (!pendingAdminId) return;
-    const password = document.getElementById("adminPassword").value;
-    if (!Auth.login("20304") || !Auth.verifyAdminPassword(password)) {
-        Auth.logout();
-        showError("비밀번호가 올바르지 않아.");
-        document.getElementById("adminPassword").value = "";
-        return;
-    }
-    location.href = "admin.html";
-});
-document.getElementById("backToId")?.addEventListener("click", () => {
-    pendingAdminId = false;
-    passwordView.hidden = true;
-    loginView.hidden = false;
-    loginError.hidden = true;
-    studentIdInput.focus();
-});
-logoutButton?.addEventListener("click", () => {
+
+logoutButton.addEventListener("click", () => {
     Auth.logout();
     showView();
 });
+
 showView();
