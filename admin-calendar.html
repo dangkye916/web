@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 관리 - 학생회</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="calendar-admin.css">
+</head>
+<body>
+
+    <div class="calendar">
+        <div class="top-row">
+            <a class="back-link" href="admin.html">← 관리자 페이지</a>
+            <div id="userArea" class="user-area"></div>
+        </div>
+
+        <p id="modeNotice" class="mode-notice"></p>
+
+        <div class="header">
+            <button id="prev" aria-label="이전 달">‹</button>
+            <h2 id="month"></h2>
+            <button id="next" aria-label="다음 달">›</button>
+        </div>
+
+        <div class="week">
+            <div>일</div>
+            <div>월</div>
+            <div>화</div>
+            <div>수</div>
+            <div>목</div>
+            <div>금</div>
+            <div>토</div>
+        </div>
+
+        <div id="days" class="days"></div>
+    </div>
+
+    <!-- 날짜별 일정 팝업 (목록 + 추가/수정 폼) -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+
+            <button id="closePopup" class="close" aria-label="닫기">&times;</button>
+
+            <h3 id="popupDate"></h3>
+
+            <div id="scheduleList"></div>
+
+            <form id="scheduleForm" class="schedule-form" autocomplete="off">
+                <h4 id="formTitle">새 일정 추가</h4>
+
+                <label for="titleInput">제목</label>
+                <input type="text" id="titleInput" placeholder="일정 제목" maxlength="100">
+
+                <label for="datetimeInput">일시</label>
+                <input type="datetime-local" id="datetimeInput">
+
+                <label for="placeInput">장소</label>
+                <input type="text" id="placeInput" placeholder="장소" maxlength="100">
+
+                <label for="contentInput">내용</label>
+                <textarea id="contentInput" rows="4" placeholder="일정 내용" maxlength="1000"></textarea>
+
+                <label for="linkInput">링크 (선택)</label>
+                <input type="text" id="linkInput" placeholder="인스타 게시물 등 링크 (https://...)" maxlength="300" inputmode="url">
+
+                <div class="form-buttons">
+                    <button type="submit" id="saveSchedule">일정 추가</button>
+                    <button type="button" id="cancelEdit" class="cancel-button" hidden>수정 취소</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- 일정 상세 팝업 -->
+    <div id="detailPopup" class="popup">
+        <div class="popup-content">
+
+            <button id="closeDetail" class="close" aria-label="닫기">&times;</button>
+
+            <h3 id="detailTitle"></h3>
+
+            <dl class="detail-list">
+                <dt>일시</dt>
+                <dd id="detailDatetime"></dd>
+
+                <dt>장소</dt>
+                <dd id="detailPlace"></dd>
+
+                <dt>내용</dt>
+                <dd id="detailContent"></dd>
+
+                <dt id="detailLinkLabel" hidden>포스터</dt>
+                <dd id="detailLinkWrap" hidden>
+                    <a id="detailLink" class="detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+                </dd>
+            </dl>
+
+            <div class="detail-actions" id="detailActions">
+                <button id="detailFavorite" class="favorite-button"></button>
+                <button id="detailEdit" class="edit-button">수정</button>
+                <button id="detailDelete" class="delete-button">삭제</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // 이 페이지는 일정 관리용 (권한 없으면 메인으로)
+        window.ADMIN_PAGE = true;
+        if (!Auth.can("calendar.edit")) location.replace("index.html");
+    </script>
+    <script src="script.js"></script>
+    <script>
+        document.querySelector(".calendar").classList.add("admin-view");
+    </script>
+</body>
+</html>
