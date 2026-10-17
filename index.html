@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학생회 웹사이트</title>
     <link rel="stylesheet" href="main.css">
+    <style>
+        .quick-links { display: flex; flex-wrap: wrap; gap: 8px; margin: -12px 0 24px; }
+        .quick-link {
+            padding: 8px 14px; border: none; border-radius: 999px; background: white;
+            color: var(--primary-dark); font: inherit; font-size: 13px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(79, 140, 247, 0.18);
+            transition: background-color 0.15s, color 0.15s, transform 0.15s;
+        }
+        .quick-link:hover { background: var(--primary); color: white; transform: translateY(-1px); }
+    </style>
 </head>
 <body>
 
@@ -23,6 +33,12 @@
             <h1>학생회 웹사이트에 오신 것을 환영합니다</h1>
             <p>일정 확인부터 학교 규정, 축제 부스 예약, 설문조사까지<br>한 곳에서 편하게 이용해 보세요.</p>
         </section>
+
+        <!-- 바로가기 (링크는 최고 관리자가 관리자 페이지에서 설정) -->
+        <div class="quick-links" aria-label="바로가기">
+            <button type="button" class="quick-link" data-key="school">🏫 학교 공식 사이트</button>
+            <button type="button" class="quick-link" data-key="instagram">📷 학생회 인스타그램</button>
+        </div>
 
         <nav class="menu" aria-label="주요 메뉴">
 
@@ -207,6 +223,23 @@
         }
 
         renderFavorites();
+
+        // ---------- 바로가기 버튼 ----------
+        document.querySelectorAll(".quick-link").forEach(button => {
+            button.addEventListener("click", () => {
+                let links = {};
+                try { links = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (error) { links = {}; }
+
+                const url = links[button.dataset.key];
+
+                if (!url || !/^https?:\/\//i.test(url)) {
+                    alert("아직 링크가 등록되지 않았어요.");
+                    return;
+                }
+
+                window.open(url, "_blank", "noopener,noreferrer");
+            });
+        });
     </script>
 </body>
 </html>
