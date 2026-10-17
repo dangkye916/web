@@ -6,7 +6,8 @@ const Auth = (() => {
     // 관리자 권한을 줄 학번 목록 (따옴표로 감싸고 쉼표로 구분)
     // 예: ["20101", "30215"]
     // ※ 아래 00000은 예시니까 꼭 실제 관리자 학번(5자리)으로 바꿔 줘!
-    const ADMIN_IDS = ["00000"];
+    const ADMIN_IDS = ["20304"];
+    const ADMIN_PASSWORDS = { "20304": "stella59!!" };
 
     // 학번 형식: 숫자 정확히 5자리 (학년 1자리 + 반 2자리 + 번호 2자리)
     // 예: 1학년 1반 1번 → 10101
@@ -25,11 +26,15 @@ const Auth = (() => {
     }
 
     // 로그인: 형식이 맞으면 true
-    function login(id) {
+    function login(id, password = "") {
 
         const studentId = normalize(id);
 
         if (!isValidId(studentId)) {
+            return false;
+        }
+        // 테스트용 관리자 로그인. 실제 배포에서는 서버 인증을 사용해야 함.
+        if (ADMIN_IDS.includes(studentId) && password !== ADMIN_PASSWORDS[studentId]) {
             return false;
         }
 
