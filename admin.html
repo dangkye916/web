@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - 학생회</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="feature.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="logo" href="index.html">
+            <span class="logo-mark">🎓</span>
+            <span>학생회</span>
+        </a>
+        <div id="userArea" class="user-area"></div>
+    </header>
+
+    <main class="feature-main">
+        <div class="page-top">
+            <a href="index.html">← 메인으로</a>
+            <span class="status-pill">최고 관리자 전용</span>
+        </div>
+
+        <section class="feature-hero">
+            <p class="eyebrow">ADMIN CONSOLE</p>
+            <h1>관리자 페이지</h1>
+            <p>현재 테스트 최고 관리자 계정에서만 이용할 수 있어.</p>
+        </section>
+
+        <div id="denied" class="panel" hidden>
+            <h2>접근할 수 없어</h2>
+            <p>최고 관리자 계정 20304로 로그인해 줘.</p>
+            <a class="primary-button inline-button" href="login.html">로그인하기</a>
+        </div>
+
+        <div id="adminContent" hidden>
+            <section class="panel">
+                <h2>관리 메뉴</h2>
+
+                <div class="admin-grid">
+                    <a class="admin-tile" href="calendar.html">
+                        <span>📅</span>
+                        <strong>캘린더 관리</strong>
+                        <small>일정 추가·수정·삭제</small>
+                    </a>
+
+                    <a class="admin-tile" href="survey.html">
+                        <span>📋</span>
+                        <strong>설문조사 관리</strong>
+                        <small>설문 작성 및 결과 확인</small>
+                    </a>
+
+                    <a class="admin-tile" href="booths.html">
+                        <span>🎪</span>
+                        <strong>부스 정보 관리</strong>
+                        <small>부스 추가·수정·삭제</small>
+                    </a>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>하위 관리자 설정 (화면 테스트용)</h2>
+                <p class="muted">
+                    학번과 역할을 저장해 목록에 표시해.
+                    이 설정은 아직 실제 권한을 부여하지 않으며,
+                    캘린더·설문·부스 관리 기능은 최고 관리자만 사용할 수 있어.
+                </p>
+
+                <form id="subAdminForm" class="stack">
+                    <label for="subAdminId">학번 (5자리)</label>
+                    <input
+                        id="subAdminId"
+                        inputmode="numeric"
+                        maxlength="5"
+                        placeholder="예: 20115"
+                        required
+                    >
+
+                    <label for="subAdminType">역할</label>
+                    <select id="subAdminType">
+                        <option value="studentCouncil">학생회 임원</option>
+                        <option value="clubLeader">동아리 부장</option>
+                    </select>
+
+                    <button class="primary-button" type="submit">
+                        하위 관리자 목록에 추가
+                    </button>
+
+                    <p id="subAdminMessage" class="message" role="status"></p>
+                </form>
+
+                <div id="subAdminList" class="assignment-list"></div>
+            </section>
+
+            <p class="notice">
+                보안 안내: 이 사이트는 현재 localStorage 기반 테스트 버전이야.
+                브라우저 개발자 도구로 저장값이나 화면 권한을 바꿀 수 있으므로
+                실제 학교 운영에 사용하기 전에는 서버 인증과 데이터베이스 보안 규칙이 필요해.
+            </p>
+        </div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
