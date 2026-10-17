@@ -66,6 +66,13 @@
             </div>
 
         </nav>
+
+        <!-- 즐겨찾기한 일정 (지나간 일정은 제외, 날짜순) -->
+        <section class="favorites" aria-labelledby="favoritesTitle">
+            <h2 id="favoritesTitle">⭐ 즐겨찾기한 일정</h2>
+            <ul id="favoriteList" class="favorite-list"></ul>
+            <p id="favoriteEmpty" class="favorite-empty" hidden></p>
+        </section>
     </main>
 
     <footer class="site-footer">
@@ -75,6 +82,130 @@
     <script src="auth.js"></script>
     <script>
         Auth.renderUserArea(document.getElementById("userArea"));
+
+        // ---------- 즐겨찾기한 일정 ----------
+
+        function pad(number) {
+            return String(number).padStart(2, "0");
+        }
+
+        function renderFavorites() {
+
+            const list = document.getElementById("favoriteList");
+            const empty = document.getElementById("favoriteEmpty");
+
+            list.innerHTML = "";
+            empty.hidden = true;
+
+            const user = Auth.getUser();
+
+            // 로그인 안 했으면 안내만 표시
+            if (!user) {
+                empty.textContent = "로그인하면 즐겨찾기한 일정을 볼 수 있어요.";
+                empty.hidden = false;
+                return;
+            }
+
+            // 내 즐겨찾기 ID 목록 (calendar 페이지에서 저장한 값)
+            let favoriteIds = [];
+
+            try {
+                const saved = JSON.parse(
+                    localStorage.getItem(`favoriteIds_${user.id}`)
+                );
+
+                if (Array.isArray(saved)) {
+                    favoriteIds = saved;
+                }
+            } catch (error) {
+                // 값이 깨졌으면 빈 목록으로 처리
+            }
+
+            const favoriteSet = new Set(favoriteIds);
+
+            // 전체 일정
+            let schedules = {};
+
+            try {
+                schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+            } catch (error) {
+                schedules = {};
+            }
+
+            // 오늘 날짜 (YYYY-MM-DD)
+            const now = new Date();
+            const todayKey =
+                `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+            const items = [];
+
+            for (const dateKey in schedules) {
+
+                const dayList = schedules[dateKey];
+
+                if (!Array.isArray(dayList)) {
+                    continue;
+                }
+
+                dayList.forEach(item => {
+
+                    if (!item || typeof item !== "object" || !favoriteSet.has(item.id)) {
+                        return;
+                    }
+
+                    const datetime = item.datetime || dateKey;
+                    const date = datetime.slice(0, 10);
+
+                    // 지나간 일정(어제까지)은 표시하지 않음 — 오늘 일정은 표시
+                    if (date < todayKey) {
+                        return;
+                    }
+
+                    items.push({
+                        datetime: datetime,
+                        date: date,
+                        title: item.title ?? item.text ?? ""
+                    });
+                });
+            }
+
+            if (items.length === 0) {
+                empty.textContent = "즐겨찾기한 일정이 없습니다.";
+                empty.hidden = false;
+                return;
+            }
+
+            // 날짜순 정렬
+            items.sort((a, b) => a.datetime.localeCompare(b.datetime));
+
+            items.forEach(item => {
+
+                const [year, month, day] = item.date.split("-");
+
+                // 올해가 아니면 연도도 같이 표시
+                const dateText =
+                    (Number(year) !== now.getFullYear() ? `${year}년 ` : "") +
+                    `${Number(month)}월 ${Number(day)}일`;
+
+                const row = document.createElement("li");
+                row.className = "favorite-item";
+
+                const dateElement = document.createElement("span");
+                dateElement.className = "favorite-date";
+                dateElement.textContent = dateText;
+
+                const titleElement = document.createElement("span");
+                titleElement.className = "favorite-title";
+                titleElement.textContent = item.title;
+
+                row.appendChild(dateElement);
+                row.appendChild(titleElement);
+
+                list.appendChild(row);
+            });
+        }
+
+        renderFavorites();
     </script>
 </body>
 </html>
