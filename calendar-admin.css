@@ -1,0 +1,54 @@
+/* 캘린더 관리자 화면 (.calendar.admin-view 일 때만 적용) */
+
+.calendar.admin-view {
+    border-top: 6px solid #7c6cf0;
+}
+
+.admin-view .mode-notice.admin {
+    padding: 11px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e8f1ff, #f1ebff);
+    color: #3a4fa8;
+    font-weight: 500;
+}
+
+/* 날짜 칸에 마우스를 올리면 "일정 추가" 힌트 */
+.admin-view .day {
+    position: relative;
+}
+
+.admin-view .day:hover::after {
+    content: "＋ 일정 추가";
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #7c6cf0;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+/* 일정 추가/수정 폼을 관리자 폼답게 구분 */
+.admin-view .schedule-form {
+    margin-top: 4px;
+    padding: 16px 14px 4px;
+    border: 1px solid #e2defb;
+    border-top: 1px solid #e2defb;
+    border-radius: 14px;
+    background: #faf9ff;
+}
+
+.admin-view .schedule-form h4::before {
+    content: "관리자 · ";
+    color: var(--muted);
+    font-weight: 500;
+}
+
+@media (hover: none), (max-width: 540px) {
+    .admin-view .day:hover::after {
+        display: none;
+    }
+}
