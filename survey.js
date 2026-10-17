@@ -199,10 +199,11 @@ function renderCreate() {
                 d.questions.length > 1 && h("button", { class: "danger-button", type: "button", onclick: () => { d.questions.splice(qi, 1); renderCreate(); } }, "질문 삭제")),
             h("input", { type: "text", placeholder: "질문 내용", value: q.text, maxlength: 200, oninput: e => { q.text = e.target.value; } }),
             h("select", { onchange: e => { q.type = e.target.value; renderCreate(); } },
-                [["single", "단일 선택 (1개)"], ["multi", "복수 선택 (정확히 N개)"], ["text", "주관식 (짧은 글)"]]
+                [["single", "단일 선택 (1개)"], ["multi", "복수 선택 (정확히 N개)"], ["text", "주관식 (직접 입력)"]]
                     .map(([v, l]) => h("option", { value: v, selected: q.type === v }, l))),
             q.type === "multi" && h("label", { class: "inline" }, "선택해야 하는 개수",
                 h("input", { type: "number", min: 2, value: q.count, class: "num", oninput: e => { q.count = Number(e.target.value); } }), "개"),
+            q.type === "text" && h("p", { class: "meta" }, "학생이 직접 글로 답하는 질문이에요."),
             q.type !== "text" && h("div", {},
                 q.options.map((o, oi) => h("div", { class: "row" },
                     h("input", { type: "text", placeholder: `항목 ${oi + 1}`, value: o, maxlength: 100, oninput: e => { q.options[oi] = e.target.value; } }),
@@ -289,9 +290,14 @@ function renderTake(s) {
             q.type === "multi" && h("p", { class: "meta count-hint" }, `${q.count}개를 선택해 주세요 (0/${q.count})`));
 
         if (q.type === "text") {
-            const readonly = q.kind === "sid";
-            box.append(h("input", { type: "text", name: `q${qi}`, maxlength: 100, readonly,
-                value: readonly ? user.id : "" }));
+            if (q.kind) {
+                // 기명 설문의 이름·학번 칸 (학번은 로그인한 학번이 자동으로 들어가요)
+                const isSid = q.kind === "sid";
+                box.append(h("input", { type: "text", name: `q${qi}`, maxlength: 100, readonly: isSid,
+                    value: isSid ? user.id : "" }));
+            } else {
+                box.append(h("textarea", { name: `q${qi}`, rows: 4, maxlength: 500, placeholder: "답을 입력해 주세요" }));
+            }
         } else {
             q.options.forEach((o, oi) => box.append(
                 h("label", { class: "option" },
@@ -343,40 +349,93 @@ function limitChecks(box, q) {
 }
 
 // ================= 결과 (관리자) =================
-function renderResults(s) {
+// 익명: 항목별 선택률만 / 기명: [항목별 선택률] [개인별 응답(학번순)] 두 가지 보기
+const isIdentityQuestion = q => q.kind === "name" || q.kind === "sid";
+
+function renderResults(s, view) {
     let responses;
     try { responses = Store.results(s.id); }
     catch (e) { return alert(e.message); }
+
+    view = (!s.anonymous && view === "people") ? "people" : "rate";
 
     const wrap = h("div", { class: "panel" },
         h("button", { class: "secondary-button", type: "button", onclick: renderList }, "← 목록으로"),
         h("h1", {}, s.title),
         h("p", { class: "meta" }, `${s.anonymous ? "익명" : "기명"} · 응답 ${responses.length}명 · ${fmt(s.start)} ~ ${fmt(s.end)}`));
 
+    if (!s.anonymous) {
+        wrap.append(h("div", { class: "tabs" },
+            [["rate", "항목별 선택률"], ["people", "개인별 응답"]].map(([key, label]) =>
+                h("button", { class: "tab" + (view === key ? " on" : ""), type: "button",
+                    onclick: () => renderResults(s, key) }, label))));
+    }
+
+    wrap.append(view === "people" ? peopleView(s, responses) : rateView(s, responses));
+    show(wrap);
+}
+
+// 항목별 선택률
+function rateView(s, responses) {
+    const box = h("div", {});
+    let number = 0;
+
     s.questions.forEach((q, qi) => {
-        const box = h("div", { class: "q-box" }, h("strong", {}, `${qi + 1}. ${q.text}`));
+        if (isIdentityQuestion(q)) return; // 이름·학번은 개인별 응답에서 확인
+
+        number++;
+        const item = h("div", { class: "q-box" }, h("strong", {}, `${number}. ${q.text}`));
 
         if (q.type === "text") {
             const list = h("ul", { class: "text-answers" });
             responses.forEach(r => list.append(h("li", {}, r.answers[qi])));
-            box.append(responses.length ? list : h("p", { class: "meta" }, "응답이 없어요."));
+            item.append(responses.length ? list : h("p", { class: "meta" }, "응답이 없어요."));
         } else {
             const counts = q.options.map(() => 0);
             responses.forEach(r => [].concat(r.answers[qi]).forEach(i => { counts[i]++; }));
-            // 비율 기준: 단일은 응답자 수, 복수는 전체 선택 수
             const base = Math.max(responses.length, 1);
             q.options.forEach((o, oi) => {
                 const pct = Math.round(counts[oi] / base * 100);
-                box.append(h("div", { class: "bar-row" },
+                item.append(h("div", { class: "bar-row" },
                     h("span", { class: "bar-label" }, o),
                     h("div", { class: "bar" }, h("div", { class: "bar-fill", style: `width:${pct}%` })),
                     h("span", { class: "bar-num" }, `${counts[oi]}표 (${pct}%)`)));
             });
         }
-        wrap.append(box);
+        box.append(item);
     });
 
-    show(wrap);
+    return box;
+}
+
+// 개인별 응답 (학번 순 = 1학년 → 2학년 → 3학년)
+function peopleView(s, responses) {
+    if (responses.length === 0) return h("p", { class: "meta" }, "응답이 없어요.");
+
+    const sidIdx = s.questions.findIndex(q => q.kind === "sid");
+    const nameIdx = s.questions.findIndex(q => q.kind === "name");
+    const columns = s.questions.map((q, i) => ({ q, i })).filter(({ q }) => !isIdentityQuestion(q));
+
+    const rows = responses.slice().sort((a, b) =>
+        Number(a.answers[sidIdx]) - Number(b.answers[sidIdx]) ||
+        String(a.answers[sidIdx]).localeCompare(String(b.answers[sidIdx])));
+
+    const cell = (q, answer) => {
+        if (q.type === "text") return answer;
+        if (q.type === "single") return q.options[answer];
+        return answer.map(i => q.options[i]).join(", ");
+    };
+
+    const table = h("table", { class: "people-table" },
+        h("thead", {}, h("tr", {},
+            h("th", {}, "학번"), h("th", {}, "이름"),
+            columns.map(({ q }, n) => h("th", {}, `${n + 1}. ${q.text}`)))),
+        h("tbody", {}, rows.map(r => h("tr", {},
+            h("td", {}, r.answers[sidIdx]),
+            h("td", {}, r.answers[nameIdx]),
+            columns.map(({ q, i }) => h("td", {}, cell(q, r.answers[i])))))));
+
+    return h("div", { class: "table-wrap" }, table);
 }
 
 renderList();
