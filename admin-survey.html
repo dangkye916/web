@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설문조사 관리 - 학생회</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="survey.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <a class="logo" href="index.html">
+            <span class="logo-mark">🎓</span>
+            <span>학생회</span>
+        </a>
+        <div id="userArea" class="user-area"></div>
+    </header>
+
+    <main>
+        <a class="login-back" href="admin.html">← 관리자 페이지</a>
+        <div id="app"></div>
+    </main>
+
+    <footer class="site-footer">© 학생회</footer>
+
+    <script src="auth.js"></script>
+    <script>window.ADMIN_PAGE = true;</script>
+    <script src="survey.js"></script>
+</body>
+</html>
