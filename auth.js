@@ -1,3 +1,4 @@
+
 // 학번 로그인 / 관리자 권한 관리 (모든 페이지에서 공통으로 사용)
 const Auth = (() => {
 
@@ -25,7 +26,7 @@ const Auth = (() => {
         return STUDENT_ID_PATTERN.test(normalize(id));
     }
 
-    // 로그인: 형식이 맞으면 true
+    // 로그인: 형식과 관리자 비밀번호가 맞으면 true
     function login(id, password = "") {
 
         const studentId = normalize(id);
@@ -33,8 +34,13 @@ const Auth = (() => {
         if (!isValidId(studentId)) {
             return false;
         }
-        // 테스트용 관리자 로그인. 실제 배포에서는 서버 인증을 사용해야 함.
-        if (ADMIN_IDS.includes(studentId) && password !== ADMIN_PASSWORDS[studentId]) {
+
+        // 테스트용 관리자 로그인.
+        // 실제 배포에서는 서버 인증을 사용해야 함.
+        if (
+            ADMIN_IDS.includes(studentId) &&
+            password !== ADMIN_PASSWORDS[studentId]
+        ) {
             return false;
         }
 
