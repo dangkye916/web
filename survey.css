@@ -1,0 +1,86 @@
+/* 설문조사 / 관리자 페이지 공통 스타일 (main.css 위에 얹어서 사용) */
+
+main { padding-bottom: 20px; }
+
+.login-back { display: inline-block; margin: 20px 0 12px; }
+
+.panel {
+    padding: 28px;
+    border-radius: 20px;
+    background: white;
+    box-shadow: var(--shadow);
+}
+
+.panel h1, .survey-top h1 { margin: 0 0 12px; font-size: 24px; font-weight: 900; }
+
+.panel label { display: block; margin: 16px 0 6px; font-size: 13px; font-weight: 700; color: #4a5568; }
+.panel label.inline { display: flex; align-items: center; gap: 8px; }
+.panel label.option, .panel label.chip { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-weight: 500; font-size: 15px; color: var(--text); }
+
+.panel input[type=text], .panel input[type=datetime-local], .panel input[type=number], .panel select {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #fafcff;
+    font: inherit;
+}
+.panel input[type=text]:focus, .panel input[type=datetime-local]:focus, .panel input[type=number]:focus, .panel select:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.18);
+}
+.panel input[readonly] { background: #eef1f6; color: var(--muted); }
+.panel input.num { width: 70px; margin: 0; }
+.panel input[type=checkbox], .panel input[type=radio] { width: auto; margin: 0; }
+
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.row.two > div { flex: 1; min-width: 180px; }
+.row > input[type=text] { flex: 1; min-width: 0; }
+
+.q-box, .target-row {
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fafcff;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; }
+.panel label.chip { margin: 2px 0; font-size: 14px; }
+
+.login-submit.small { width: auto; margin: 0; padding: 10px 18px; font-size: 14px; }
+.panel .login-submit { width: auto; margin-top: 20px; padding: 12px 28px; }
+.secondary-button, .danger-button { padding: 8px 14px; font-size: 13px; }
+.panel .secondary-button { margin-top: 8px; }
+.danger-button { border: none; border-radius: 12px; background: #fdeaea; color: #d94444; font: inherit; font-weight: 700; cursor: pointer; }
+.danger-button:hover { background: #ef5b5b; color: white; }
+
+.survey-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tab { padding: 9px 16px; border: none; border-radius: 999px; background: rgba(255,255,255,.7); color: var(--muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.tab.on { background: white; color: var(--primary-dark); box-shadow: 0 4px 12px rgba(79,140,247,.18); }
+
+.survey-list { display: flex; flex-direction: column; gap: 12px; }
+.survey-card { padding: 20px; border-radius: 18px; background: white; box-shadow: var(--shadow); }
+.survey-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.survey-head h2 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.meta { margin: 6px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.count { margin-right: auto; font-size: 13px; font-weight: 700; color: var(--primary-dark); }
+.mode-note { margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+
+.bar-row { display: grid; grid-template-columns: 1fr 1.4fr auto; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; }
+.bar { height: 12px; border-radius: 999px; background: #eef1f6; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #5b9bff, var(--purple)); }
+.bar-num { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.text-answers { margin: 10px 0 0; padding-left: 20px; line-height: 1.7; }
+
+.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 8px; }
+.admin-grid .wide { grid-column: 1 / -1; }
+
+@media (max-width: 640px) {
+    .panel { padding: 20px 16px; }
+    .admin-grid { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 1fr; gap: 4px; }
+}
