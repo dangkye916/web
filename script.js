@@ -419,7 +419,6 @@ function renderScheduleList() {
 
             const editButton = document.createElement("button");
             editButton.type = "button";
-
             editButton.classList.add("edit-button");
             editButton.textContent = "수정";
 
