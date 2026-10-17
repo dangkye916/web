@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학생회 캘린더</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="calendar-admin.css">
 </head>
 <body>
 
@@ -43,59 +44,29 @@
 
             <h3 id="popupDate"></h3>
 
-            <!-- 일정 목록 -->
             <div id="scheduleList"></div>
 
-            <!-- 일정 추가 / 수정 폼 -->
             <form id="scheduleForm" class="schedule-form" autocomplete="off">
                 <h4 id="formTitle">새 일정 추가</h4>
 
                 <label for="titleInput">제목</label>
-                <input
-                    type="text"
-                    id="titleInput"
-                    placeholder="일정 제목"
-                    maxlength="100"
-                >
+                <input type="text" id="titleInput" placeholder="일정 제목" maxlength="100">
 
                 <label for="datetimeInput">일시</label>
                 <input type="datetime-local" id="datetimeInput">
 
                 <label for="placeInput">장소</label>
-                <input
-                    type="text"
-                    id="placeInput"
-                    placeholder="장소"
-                    maxlength="100"
-                >
+                <input type="text" id="placeInput" placeholder="장소" maxlength="100">
 
                 <label for="contentInput">내용</label>
-                <textarea
-                    id="contentInput"
-                    rows="4"
-                    placeholder="일정 내용"
-                    maxlength="1000"
-                ></textarea>
+                <textarea id="contentInput" rows="4" placeholder="일정 내용" maxlength="1000"></textarea>
 
                 <label for="linkInput">링크 (선택)</label>
-                <input
-                    type="text"
-                    id="linkInput"
-                    placeholder="인스타 게시물 등 링크 (https://...)"
-                    maxlength="300"
-                    inputmode="url"
-                >
+                <input type="text" id="linkInput" placeholder="인스타 게시물 등 링크 (https://...)" maxlength="300" inputmode="url">
 
                 <div class="form-buttons">
                     <button type="submit" id="saveSchedule">일정 추가</button>
-                    <button
-                        type="button"
-                        id="cancelEdit"
-                        class="cancel-button"
-                        hidden
-                    >
-                        수정 취소
-                    </button>
+                    <button type="button" id="cancelEdit" class="cancel-button" hidden>수정 취소</button>
                 </div>
             </form>
 
@@ -122,13 +93,7 @@
 
                 <dt id="detailLinkLabel" hidden>포스터 · 링크</dt>
                 <dd id="detailLinkWrap" hidden>
-                    <a
-                        id="detailLink"
-                        class="detail-link"
-                        href="#"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    ></a>
+                    <a id="detailLink" class="detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
                 </dd>
             </dl>
 
@@ -143,5 +108,11 @@
 
     <script src="auth.js"></script>
     <script src="script.js"></script>
+    <script>
+        // 관리자일 때만 캘린더에 관리자 표시(상단 띠, 날짜 칸 "+ 일정 추가")를 켬
+        if (Auth.can("calendar.edit")) {
+            document.querySelector(".calendar").classList.add("admin-view");
+        }
+    </script>
 </body>
 </html>
