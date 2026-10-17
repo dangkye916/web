@@ -37,7 +37,7 @@ const detailLink = document.getElementById("detailLink");
 const currentUser = Auth.getUser();
 
 // 관리자만 일정을 추가·수정·삭제 할 수 있음
-const adminMode = Auth.isAdmin();
+const adminMode = window.ADMIN_PAGE === true && Auth.can("calendar.edit");
 
 // 로그인한 사람(학생·관리자)은 누구나 자기만의 즐겨찾기를 할 수 있음
 const canFavorite = Boolean(currentUser);
@@ -679,7 +679,7 @@ function openDetail(dateKey, id) {
 
         detailLink.href = safeLink;
         detailLink.textContent =
-            isInstagram ? "📷 인스타그램 게시물 보기" : "🔗 링크 열기";
+            isInstagram ? "📷 인스타그램 포스터 게시물 보기" : "🔗 링크 열기";
 
         detailLinkLabel.hidden = false;
         detailLinkWrap.hidden = false;
@@ -823,14 +823,13 @@ const modeNotice = document.getElementById("modeNotice");
 
 if (adminMode) {
     modeNotice.textContent =
-        "관리자 모드 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요. ★ 즐겨찾기는 나만 볼 수 있어요.";
+        "일정 관리 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요.";
     modeNotice.classList.add("admin");
-} else if (currentUser) {
+} else if (!currentUser) {
     modeNotice.textContent =
-        "보기 전용 · 일정 추가와 수정은 관리자만 할 수 있어요. ★ 즐겨찾기는 나만 볼 수 있어요.";
+        "로그인하면 일정을 즐겨찾기할 수 있어요.";
 } else {
-    modeNotice.textContent =
-        "보기 전용 · 로그인하면 일정을 즐겨찾기할 수 있어요.";
+    modeNotice.hidden = true;
 }
 
 
