@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - 학생회</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="survey.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <a class="logo" href="index.html">
+            <span class="logo-mark">🎓</span>
+            <span>학생회</span>
+        </a>
+        <div id="userArea" class="user-area"></div>
+    </header>
+
+    <main>
+        <a class="login-back" href="index.html">← 메인으로</a>
+
+        <h1 style="margin:0 0 12px;font-size:26px;font-weight:900">관리자 페이지</h1>
+
+        <div class="admin-grid">
+
+            <a class="menu-card" href="calendar.html">
+                <span class="menu-icon icon-calendar">📅</span>
+                <span class="menu-text">
+                    <h2>일정 관리</h2>
+                    <p>캘린더에서 일정을 추가·수정·삭제해요</p>
+                </span>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <a class="menu-card" href="survey.html">
+                <span class="menu-icon icon-vote">📝</span>
+                <span class="menu-text">
+                    <h2>설문조사 관리</h2>
+                    <p>설문을 만들고 결과를 확인해요</p>
+                </span>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <!-- 부스 등 다른 기능은 합칠 때 위와 같은 menu-card를 여기에 추가하면 돼요 -->
+
+            <section class="panel wide">
+                <h2 style="margin:0 0 4px;font-size:19px">하위 관리자 지정</h2>
+                <p class="meta">테스트 화면이에요. 지정해도 실제로 적용되지는 않아요.</p>
+
+                <form id="subAdminForm" autocomplete="off">
+                    <label for="subAdminId">학번</label>
+                    <input type="text" id="subAdminId" inputmode="numeric" maxlength="5" placeholder="5자리 학번">
+
+                    <label>맡길 권한</label>
+                    <label class="option"><input type="checkbox" checked> 일정 관리</label>
+                    <label class="option"><input type="checkbox"> 설문조사 관리</label>
+
+                    <button type="submit" class="login-submit">지정하기</button>
+                    <p id="subAdminMsg" class="login-error" hidden></p>
+                </form>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">© 학생회</footer>
+
+    <script src="auth.js"></script>
+    <script>
+        // 관리자가 아니면 메인으로 돌려보냄
+        if (!Auth.can("admin.manage")) {
+            location.replace("index.html");
+        }
+
+        Auth.renderUserArea(document.getElementById("userArea"));
+
+        document.getElementById("subAdminForm").addEventListener("submit", event => {
+            event.preventDefault();
+
+            const id = document.getElementById("subAdminId").value.trim();
+            const msg = document.getElementById("subAdminMsg");
+
+            msg.textContent = Auth.isValidId(id)
+                ? "테스트 버전이라 실제로 적용되지 않아요."
+                : "학번은 5자리 숫자로 입력해 주세요.";
+            msg.hidden = false;
+        });
+    </script>
+</body>
+</html>
