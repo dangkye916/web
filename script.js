@@ -29,8 +29,14 @@ const detailEdit = document.getElementById("detailEdit");
 const detailDelete = document.getElementById("detailDelete");
 const detailActions = document.getElementById("detailActions");
 
-// 관리자만 일정을 추가·수정·삭제·즐겨찾기 할 수 있음
+// 현재 로그인한 사용자 (없으면 null)
+const currentUser = Auth.getUser();
+
+// 관리자만 일정을 추가·수정·삭제 할 수 있음
 const adminMode = Auth.isAdmin();
+
+// 로그인한 사람(학생·관리자)은 누구나 자기만의 즐겨찾기를 할 수 있음
+const canFavorite = Boolean(currentUser);
 
 let currentDate = new Date();
 let selectedDateKey = "";   // 날짜 팝업에서 선택된 날짜
@@ -53,7 +59,8 @@ function createScheduleId() {
 }
 
 // 예전 형식(문자열 / text 필드)을 새 형식으로 변환
-// 새 형식: { id, title, datetime, place, content, favorite }
+// 새 형식: { id, title, datetime, place, content }
+// (favorite 필드는 예전 데이터 호환용으로만 읽고, 이제는 사용자별 즐겨찾기를 따로 저장해요)
 function normalizeSchedule(item, dateKey) {
 
     if (typeof item === "string") {
@@ -110,6 +117,64 @@ function saveSchedules() {
 }
 
 saveSchedules();
+
+
+// ---------- 즐겨찾기 (사용자별로 저장) ----------
+
+// 학번마다 따로 저장돼요. 예) favoriteIds_20304
+const favoriteStorageKey =
+    currentUser ? `favoriteIds_${currentUser.id}` : null;
+
+let favoriteIds = new Set();
+let hasSavedFavorites = false;
+
+if (favoriteStorageKey) {
+
+    try {
+        const saved = JSON.parse(localStorage.getItem(favoriteStorageKey));
+
+        if (Array.isArray(saved)) {
+            favoriteIds = new Set(saved);
+            hasSavedFavorites = true;
+        }
+    } catch (error) {
+        // 저장된 값이 깨졌으면 빈 목록으로 시작
+    }
+}
+
+function saveFavorites() {
+
+    if (!favoriteStorageKey) {
+        return;
+    }
+
+    try {
+        localStorage.setItem(
+            favoriteStorageKey,
+            JSON.stringify([...favoriteIds])
+        );
+    } catch (error) {
+        // 저장 실패 시 무시
+    }
+}
+
+function isFavorite(id) {
+    return favoriteIds.has(id);
+}
+
+// 예전에 관리자가 일정에 직접 눌러 둔 즐겨찾기를, 처음 접속한 관리자의 즐겨찾기로 옮겨 줌
+if (adminMode && !hasSavedFavorites) {
+
+    for (const dateKey in schedules) {
+        schedules[dateKey].forEach(item => {
+            if (item.favorite) {
+                favoriteIds.add(item.id);
+            }
+        });
+    }
+
+    saveFavorites();
+}
 
 
 // 날짜별 일정 목록 (일시 순서로 정렬)
@@ -205,15 +270,17 @@ function createCalendar() {
         // 캘린더에는 제목만 표시
         getSchedules(dateKey).forEach(schedule => {
 
+            const favorite = isFavorite(schedule.id);
+
             const scheduleElement = document.createElement("div");
             scheduleElement.classList.add("schedule");
 
-            if (schedule.favorite) {
+            if (favorite) {
                 scheduleElement.classList.add("favorite");
             }
 
             scheduleElement.textContent =
-                (schedule.favorite ? "★ " : "") + schedule.title;
+                (favorite ? "★ " : "") + schedule.title;
 
             scheduleElement.title = schedule.title;
 
@@ -273,6 +340,8 @@ function renderScheduleList() {
 
     dateSchedules.forEach(schedule => {
 
+        const favorite = isFavorite(schedule.id);
+
         const item = document.createElement("div");
         item.classList.add("schedule-item");
 
@@ -290,53 +359,47 @@ function renderScheduleList() {
         const actions = document.createElement("div");
         actions.classList.add("schedule-actions");
 
-        // 즐겨찾기
-        const favoriteButton = document.createElement("button");
-        favoriteButton.type = "button";
-        favoriteButton.classList.add("favorite-button");
-        favoriteButton.textContent = schedule.favorite ? "★" : "☆";
-        favoriteButton.title =
-            schedule.favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
-        favoriteButton.setAttribute("aria-label", favoriteButton.title);
+        // 즐겨찾기 (로그인한 학생·관리자 모두 가능)
+        if (canFavorite) {
 
-        favoriteButton.addEventListener("click", () => {
-            toggleFavorite(selectedDateKey, schedule.id);
-        });
+            const favoriteButton = document.createElement("button");
+            favoriteButton.type = "button";
+            favoriteButton.classList.add("favorite-button");
+            favoriteButton.textContent = favorite ? "★" : "☆";
+            favoriteButton.title =
+                favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
+            favoriteButton.setAttribute("aria-label", favoriteButton.title);
 
-        // 수정
-        const editButton = document.createElement("button");
-        editButton.type = "button";
-        editButton.classList.add("edit-button");
-        editButton.textContent = "수정";
-
-        editButton.addEventListener("click", () => {
-            startEdit(selectedDateKey, schedule.id);
-        });
-
-        // 삭제
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.classList.add("delete-button");
-        deleteButton.textContent = "삭제";
-
-        deleteButton.addEventListener("click", () => {
-            deleteSchedule(selectedDateKey, schedule.id);
-        });
-
-        if (adminMode) {
+            favoriteButton.addEventListener("click", () => {
+                toggleFavorite(selectedDateKey, schedule.id);
+            });
 
             actions.appendChild(favoriteButton);
+        }
+
+        // 수정 / 삭제 (관리자만)
+        if (adminMode) {
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.classList.add("edit-button");
+            editButton.textContent = "수정";
+
+            editButton.addEventListener("click", () => {
+                startEdit(selectedDateKey, schedule.id);
+            });
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.classList.add("delete-button");
+            deleteButton.textContent = "삭제";
+
+            deleteButton.addEventListener("click", () => {
+                deleteSchedule(selectedDateKey, schedule.id);
+            });
+
             actions.appendChild(editButton);
             actions.appendChild(deleteButton);
-
-        } else if (schedule.favorite) {
-
-            // 학생에게는 즐겨찾기 표시만 보여 줌
-            const star = document.createElement("span");
-            star.classList.add("read-star");
-            star.textContent = "★";
-
-            actions.appendChild(star);
         }
 
         item.appendChild(text);
@@ -351,7 +414,8 @@ function renderScheduleList() {
 
 function toggleFavorite(dateKey, id) {
 
-    if (!adminMode) {
+    // 로그인하지 않았으면 즐겨찾기 불가
+    if (!canFavorite) {
         return;
     }
 
@@ -361,9 +425,13 @@ function toggleFavorite(dateKey, id) {
         return;
     }
 
-    schedule.favorite = !schedule.favorite;
+    if (favoriteIds.has(id)) {
+        favoriteIds.delete(id);
+    } else {
+        favoriteIds.add(id);
+    }
 
-    saveSchedules();
+    saveFavorites();
     refreshViews();
 }
 
@@ -384,6 +452,11 @@ function deleteSchedule(dateKey, id) {
     }
 
     removeSchedule(dateKey, id);
+
+    // 내 즐겨찾기에서도 제거
+    if (favoriteIds.delete(id)) {
+        saveFavorites();
+    }
 
     // 수정 중이던 일정을 지웠다면 폼 초기화
     if (editingId === id) {
@@ -507,8 +580,7 @@ scheduleForm.addEventListener("submit", event => {
 
         schedules[newDateKey].push({
             id: createScheduleId(),
-            ...data,
-            favorite: false
+            ...data
         });
     }
 
@@ -538,25 +610,29 @@ function openDetail(dateKey, id) {
 
     detailRef = { dateKey: dateKey, id: id };
 
-    detailTitle.textContent =
-        (schedule.favorite && !adminMode ? "★ " : "") + schedule.title;
+    detailTitle.textContent = schedule.title;
     detailDatetime.textContent = formatDatetime(schedule.datetime);
     detailPlace.textContent = schedule.place || "장소 없음";
     detailContent.textContent = schedule.content || "내용 없음";
 
     updateDetailFavorite(schedule);
 
-    // 학생에게는 수정/삭제/즐겨찾기 버튼을 숨김
-    detailActions.hidden = !adminMode;
+    // 즐겨찾기 버튼: 로그인한 사람만 / 수정·삭제 버튼: 관리자만
+    detailFavorite.hidden = !canFavorite;
+    detailEdit.hidden = !adminMode;
+    detailDelete.hidden = !adminMode;
+    detailActions.hidden = !canFavorite && !adminMode;
 
     detailPopup.style.display = "flex";
 }
 
 function updateDetailFavorite(schedule) {
 
-    detailFavorite.textContent = schedule.favorite ? "★" : "☆";
+    const favorite = isFavorite(schedule.id);
+
+    detailFavorite.textContent = favorite ? "★" : "☆";
     detailFavorite.title =
-        schedule.favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
+        favorite ? "즐겨찾기 해제" : "즐겨찾기 추가";
     detailFavorite.setAttribute("aria-label", detailFavorite.title);
 }
 
@@ -671,11 +747,14 @@ const modeNotice = document.getElementById("modeNotice");
 
 if (adminMode) {
     modeNotice.textContent =
-        "관리자 모드 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요.";
+        "관리자 모드 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요. ★ 즐겨찾기는 나만 볼 수 있어요.";
     modeNotice.classList.add("admin");
+} else if (currentUser) {
+    modeNotice.textContent =
+        "보기 전용 · 일정 추가와 수정은 관리자만 할 수 있어요. ★ 즐겨찾기는 나만 볼 수 있어요.";
 } else {
     modeNotice.textContent =
-        "보기 전용 · 일정 추가와 수정은 관리자만 할 수 있어요.";
+        "보기 전용 · 로그인하면 일정을 즐겨찾기할 수 있어요.";
 }
 
 
