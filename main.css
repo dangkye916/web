@@ -707,3 +707,79 @@ main {
         margin-top: 40px;
     }
 }
+
+/* ---------- 즐겨찾기한 일정 (메인) ---------- */
+
+.favorites {
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 20px;
+    background-color: white;
+    box-shadow: var(--shadow);
+}
+
+.favorites h2 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.favorite-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.favorite-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background-color: #fffaf0;
+    border-left: 4px solid #f5b301;
+}
+
+.favorite-date {
+    flex-shrink: 0;
+    min-width: 84px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #a87800;
+}
+
+.favorite-title {
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.favorite-empty {
+    margin: 0;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: #f6f8fb;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .favorites {
+        margin-top: 20px;
+        padding: 18px;
+    }
+
+    .favorite-item {
+        gap: 10px;
+    }
+
+    .favorite-date {
+        min-width: 70px;
+        font-size: 13px;
+    }
+}
