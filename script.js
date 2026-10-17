@@ -14,6 +14,7 @@ const titleInput = document.getElementById("titleInput");
 const datetimeInput = document.getElementById("datetimeInput");
 const placeInput = document.getElementById("placeInput");
 const contentInput = document.getElementById("contentInput");
+const linkInput = document.getElementById("linkInput");
 const saveSchedule = document.getElementById("saveSchedule");
 const cancelEdit = document.getElementById("cancelEdit");
 
@@ -28,6 +29,9 @@ const detailFavorite = document.getElementById("detailFavorite");
 const detailEdit = document.getElementById("detailEdit");
 const detailDelete = document.getElementById("detailDelete");
 const detailActions = document.getElementById("detailActions");
+const detailLinkLabel = document.getElementById("detailLinkLabel");
+const detailLinkWrap = document.getElementById("detailLinkWrap");
+const detailLink = document.getElementById("detailLink");
 
 // 현재 로그인한 사용자 (없으면 null)
 const currentUser = Auth.getUser();
@@ -59,7 +63,7 @@ function createScheduleId() {
 }
 
 // 예전 형식(문자열 / text 필드)을 새 형식으로 변환
-// 새 형식: { id, title, datetime, place, content }
+// 새 형식: { id, title, datetime, place, content, link }
 // (favorite 필드는 예전 데이터 호환용으로만 읽고, 이제는 사용자별 즐겨찾기를 따로 저장해요)
 function normalizeSchedule(item, dateKey) {
 
@@ -70,6 +74,7 @@ function normalizeSchedule(item, dateKey) {
             datetime: dateKey,
             place: "",
             content: "",
+            link: "",
             favorite: false
         };
     }
@@ -80,6 +85,7 @@ function normalizeSchedule(item, dateKey) {
         datetime: item.datetime ?? dateKey,
         place: item.place ?? "",
         content: item.content ?? "",
+        link: item.link ?? "",
         favorite: Boolean(item.favorite)
     };
 }
@@ -222,6 +228,36 @@ function toInputValue(value, fallbackDateKey) {
     }
 
     return value.includes("T") ? value : `${value}T09:00`;
+}
+
+
+// 링크는 http / https 주소만 허용 (javascript: 같은 위험한 주소는 차단)
+// 비어 있으면 "", 올바르지 않은 주소면 null
+function normalizeLink(value) {
+
+    const text = String(value ?? "").trim();
+
+    if (text === "") {
+        return "";
+    }
+
+    // https:// 를 빼먹고 붙여 넣었으면 자동으로 붙여 줌
+    const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text)
+        ? text
+        : `https://${text}`;
+
+    try {
+        const url = new URL(withScheme);
+
+        if (url.protocol !== "https:" && url.protocol !== "http:") {
+            return null;
+        }
+
+        return url.href;
+
+    } catch (error) {
+        return null;
+    }
 }
 
 
@@ -498,6 +534,7 @@ function startEdit(dateKey, id) {
     datetimeInput.value = toInputValue(schedule.datetime, dateKey);
     placeInput.value = schedule.place;
     contentInput.value = schedule.content;
+    linkInput.value = schedule.link || "";
 
     formTitle.textContent = "일정 수정";
     saveSchedule.textContent = "수정 완료";
@@ -517,6 +554,7 @@ function resetForm() {
     datetimeInput.value = `${selectedDateKey}T09:00`;
     placeInput.value = "";
     contentInput.value = "";
+    linkInput.value = "";
 
     formTitle.textContent = "새 일정 추가";
     saveSchedule.textContent = "일정 추가";
@@ -548,11 +586,21 @@ scheduleForm.addEventListener("submit", event => {
     const datetime = datetimeInput.value || selectedDateKey;
     const newDateKey = datetime.slice(0, 10);
 
+    const linkValue = linkInput.value.trim();
+    const link = normalizeLink(linkValue);
+
+    if (linkValue !== "" && link === null) {
+        alert("링크는 https://로 시작하는 올바른 주소로 입력해 줘.");
+        linkInput.focus();
+        return;
+    }
+
     const data = {
         title: title,
         datetime: datetime,
         place: placeInput.value.trim(),
-        content: contentInput.value.trim()
+        content: contentInput.value.trim(),
+        link: link
     };
 
     if (editingId) {
@@ -614,6 +662,34 @@ function openDetail(dateKey, id) {
     detailDatetime.textContent = formatDatetime(schedule.datetime);
     detailPlace.textContent = schedule.place || "장소 없음";
     detailContent.textContent = schedule.content || "내용 없음";
+
+    // 링크 (저장된 값도 한 번 더 검사해서 안전한 주소만 표시)
+    const safeLink = normalizeLink(schedule.link);
+
+    if (safeLink) {
+
+        let isInstagram = false;
+
+        try {
+            isInstagram =
+                /(^|\.)instagram\.com$/.test(new URL(safeLink).hostname);
+        } catch (error) {
+            // 무시
+        }
+
+        detailLink.href = safeLink;
+        detailLink.textContent =
+            isInstagram ? "📷 인스타그램 게시물 보기" : "🔗 링크 열기";
+
+        detailLinkLabel.hidden = false;
+        detailLinkWrap.hidden = false;
+
+    } else {
+
+        detailLink.removeAttribute("href");
+        detailLinkLabel.hidden = true;
+        detailLinkWrap.hidden = true;
+    }
 
     updateDetailFavorite(schedule);
 
