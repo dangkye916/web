@@ -5,6 +5,8 @@ const loggedInText = document.getElementById("loggedInText");
 const loginForm = document.getElementById("loginForm");
 const studentIdInput = document.getElementById("studentId");
 const loginError = document.getElementById("loginError");
+const adminPasswordWrap = document.getElementById("adminPasswordWrap");
+const adminPasswordInput = document.getElementById("adminPassword");
 const logoutButton = document.getElementById("logoutButton");
 
 
@@ -44,6 +46,9 @@ studentIdInput.addEventListener("input", () => {
         studentIdInput.value.replace(/\D/g, "");
 
     loginError.hidden = true;
+    const isAdminId = studentIdInput.value.trim() === "20304";
+    adminPasswordWrap.hidden = !isAdminId;
+    if (!isAdminId) adminPasswordInput.value = "";
 });
 
 
@@ -63,8 +68,14 @@ loginForm.addEventListener("submit", event => {
         return;
     }
 
-    if (!Auth.login(studentId)) {
-        showError("이 브라우저에서는 로그인 정보를 저장할 수 없어요. 쿠키/사이트 데이터 차단 설정을 확인해 주세요.");
+    if (studentId === "20304" && !adminPasswordInput.value) {
+        showError("관리자 비밀번호를 입력해 주세요.");
+        adminPasswordInput.focus();
+        return;
+    }
+
+    if (!Auth.login(studentId, adminPasswordInput.value)) {
+        showError(studentId === "20304" ? "관리자 비밀번호가 올바르지 않아요." : "이 브라우저에서는 로그인 정보를 저장할 수 없어요. 사이트 데이터 설정을 확인해 주세요.");
         return;
     }
 
