@@ -62,6 +62,9 @@
                 <label for="contentInput">내용</label>
                 <textarea id="contentInput" rows="4" placeholder="일정 내용" maxlength="1000"></textarea>
 
+                <label for="linkInput">링크 (선택)</label>
+                <input type="text" id="linkInput" placeholder="인스타 게시물 등 링크 (https://...)" maxlength="300" inputmode="url">
+
                 <div class="form-buttons">
                     <button type="submit" id="saveSchedule">일정 추가</button>
                     <button type="button" id="cancelEdit" class="cancel-button" hidden>수정 취소</button>
@@ -88,6 +91,11 @@
 
                 <dt>내용</dt>
                 <dd id="detailContent"></dd>
+
+                <dt id="detailLinkLabel" hidden>포스터 · 링크</dt>
+                <dd id="detailLinkWrap" hidden>
+                    <a id="detailLink" class="detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+                </dd>
             </dl>
 
             <div class="detail-actions" id="detailActions">
