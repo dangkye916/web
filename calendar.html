@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학생회 캘린더</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="calendar-admin.css">
 </head>
 <body>
 
@@ -91,7 +90,7 @@
                 <dt>내용</dt>
                 <dd id="detailContent"></dd>
 
-                <dt id="detailLinkLabel" hidden>포스터 · 링크</dt>
+                <dt id="detailLinkLabel" hidden>포스터</dt>
                 <dd id="detailLinkWrap" hidden>
                     <a id="detailLink" class="detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
                 </dd>
@@ -108,11 +107,5 @@
 
     <script src="auth.js"></script>
     <script src="script.js"></script>
-    <script>
-        // 관리자일 때만 캘린더에 관리자 표시(상단 띠, 날짜 칸 "+ 일정 추가")를 켬
-        if (Auth.can("calendar.edit")) {
-            document.querySelector(".calendar").classList.add("admin-view");
-        }
-    </script>
 </body>
 </html>
