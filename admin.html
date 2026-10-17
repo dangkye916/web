@@ -24,25 +24,41 @@
 
         <div class="admin-grid">
 
-            <a class="menu-card" href="calendar.html">
+            <a class="menu-card" href="admin-calendar.html">
                 <span class="menu-icon icon-calendar">📅</span>
                 <span class="menu-text">
                     <h2>일정 관리</h2>
-                    <p>캘린더에서 일정을 추가·수정·삭제해요</p>
+                    <p>일정을 추가·수정·삭제해요</p>
                 </span>
                 <span class="menu-arrow">›</span>
             </a>
 
-            <a class="menu-card" href="survey.html">
+            <a class="menu-card" href="admin-survey.html">
                 <span class="menu-icon icon-vote">📝</span>
                 <span class="menu-text">
                     <h2>설문조사 관리</h2>
-                    <p>설문을 만들고 결과를 확인해요</p>
+                    <p>설문을 만들고, 결과를 보고, 삭제해요</p>
                 </span>
                 <span class="menu-arrow">›</span>
             </a>
 
             <!-- 부스 등 다른 기능은 합칠 때 위와 같은 menu-card를 여기에 추가하면 돼요 -->
+
+            <section class="panel wide">
+                <h2 style="margin:0 0 4px;font-size:19px">바로가기 링크 설정</h2>
+                <p class="meta">메인 화면의 작은 버튼에 연결될 주소예요. 비워서 저장하면 링크가 지워져요.</p>
+
+                <form id="linksForm" autocomplete="off">
+                    <label for="schoolLink">학교 공식 사이트</label>
+                    <input type="text" id="schoolLink" placeholder="https://..." maxlength="300" inputmode="url">
+
+                    <label for="instagramLink">학생회 인스타그램</label>
+                    <input type="text" id="instagramLink" placeholder="https://www.instagram.com/..." maxlength="300" inputmode="url">
+
+                    <button type="submit" class="login-submit">링크 저장</button>
+                    <p id="linksMsg" class="login-error" hidden></p>
+                </form>
+            </section>
 
             <section class="panel wide">
                 <h2 style="margin:0 0 4px;font-size:19px">하위 관리자 지정</h2>
@@ -52,9 +68,9 @@
                     <label for="subAdminId">학번</label>
                     <input type="text" id="subAdminId" inputmode="numeric" maxlength="5" placeholder="5자리 학번">
 
-                    <label>맡길 권한</label>
-                    <label class="option"><input type="checkbox" checked> 일정 관리</label>
-                    <label class="option"><input type="checkbox"> 설문조사 관리</label>
+                    <label>역할</label>
+                    <label class="option"><input type="checkbox"> 학생회 임원</label>
+                    <label class="option"><input type="checkbox"> 동아리 부장</label>
 
                     <button type="submit" class="login-submit">지정하기</button>
                     <p id="subAdminMsg" class="login-error" hidden></p>
@@ -74,6 +90,61 @@
         }
 
         Auth.renderUserArea(document.getElementById("userArea"));
+
+        // ---------- 바로가기 링크 ----------
+
+        const schoolInput = document.getElementById("schoolLink");
+        const instagramInput = document.getElementById("instagramLink");
+        const linksMsg = document.getElementById("linksMsg");
+
+        // http / https 주소만 허용. 비어 있으면 "", 올바르지 않으면 null
+        function normalizeLink(value) {
+            const text = String(value ?? "").trim();
+            if (text === "") return "";
+
+            const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text) ? text : `https://${text}`;
+
+            try {
+                const url = new URL(withScheme);
+                return (url.protocol === "https:" || url.protocol === "http:") ? url.href : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function showLinksMsg(text, ok) {
+            linksMsg.textContent = text;
+            linksMsg.style.background = ok ? "#e6f7ee" : "";
+            linksMsg.style.color = ok ? "#1f7a4a" : "";
+            linksMsg.hidden = false;
+        }
+
+        let savedLinks = {};
+        try { savedLinks = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (error) { savedLinks = {}; }
+
+        schoolInput.value = savedLinks.school || "";
+        instagramInput.value = savedLinks.instagram || "";
+
+        document.getElementById("linksForm").addEventListener("submit", event => {
+            event.preventDefault();
+
+            if (!Auth.can("admin.manage")) return;
+
+            const school = normalizeLink(schoolInput.value);
+            const instagram = normalizeLink(instagramInput.value);
+
+            if (school === null || instagram === null) {
+                showLinksMsg("https://로 시작하는 올바른 주소를 입력해 주세요.", false);
+                return;
+            }
+
+            localStorage.setItem("siteLinks", JSON.stringify({ school, instagram }));
+            schoolInput.value = school;
+            instagramInput.value = instagram;
+            showLinksMsg("저장했어요. 메인 화면 버튼에 바로 반영돼요.", true);
+        });
+
+        // ---------- 하위 관리자 (테스트 화면) ----------
 
         document.getElementById("subAdminForm").addEventListener("submit", event => {
             event.preventDefault();
