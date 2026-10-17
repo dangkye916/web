@@ -9,7 +9,7 @@ const Auth = (() => {
     const ADMIN_IDS = ["00000"];
 
     // 학번 형식: 숫자 정확히 5자리 (학년 1자리 + 반 2자리 + 번호 2자리)
-    // 예: 2학년 3반 4번 → 20304
+    // 예: 1학년 1반 1번 → 10101
     const STUDENT_ID_PATTERN = /^\d{5}$/;
 
     const STORAGE_KEY = "currentStudentId";
