@@ -1,6 +1,6 @@
 // ================= 데이터 (서버 연결할 때 이 부분만 바꾸면 돼요) =================
-// 학년별 반 수 (1학년 7반, 2학년 7반, 3학년 8반)
-const CLASS_COUNT = { 1: 7, 2: 7, 3: 8 };
+// 학년별 반 수는 관리자 페이지에서 설정한 값을 가져와요 (auth.js 참고)
+const classCount = () => Auth.getClassCount();
 const range = n => Array.from({ length: n }, (_, i) => i + 1);
 
 function load(key, fallback) {
@@ -79,7 +79,7 @@ function fmt(v) { return v.replace("T", " "); }
 
 function targetText(s) {
     return s.targets.map(t =>
-        `${t.grade}학년 ` + (t.classes.length === CLASS_COUNT[t.grade] ? "전체 반" : t.classes.map(c => c + "반").join(", "))
+        `${t.grade}학년 ` + (t.classes.length === classCount()[t.grade] ? "전체 반" : t.classes.map(c => c + "반").join(", "))
     ).join(" / ");
 }
 
@@ -161,7 +161,7 @@ function startCreate() {
     if (!Auth.can("survey.create")) return;
     draft = {
         title: "", start: "", end: "", anonymous: true,
-        targets: [1, 2, 3].map(g => ({ grade: g, classes: range(CLASS_COUNT[g]) })),
+        targets: [1, 2, 3].map(g => ({ grade: g, classes: range(classCount()[g]) })),
         questions: [{ text: "", type: "single", count: 2, options: ["", ""] }]
     };
     renderCreate();
@@ -181,7 +181,7 @@ function renderCreate() {
 
     // 1·2·3학년이 항상 보이고, 처음엔 모든 반이 선택된 상태
     const targets = h("div", {}, d.targets.map(t => {
-        const total = CLASS_COUNT[t.grade];
+        const total = classCount()[t.grade];
         const allOn = t.classes.length === total;
         return h("div", { class: "target-row" },
             h("div", { class: "row" },
