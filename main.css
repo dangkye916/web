@@ -512,6 +512,13 @@ main {
     animation: shake 0.35s ease;
 }
 
+/* 성공 안내 문구: 오류처럼 떨리지 않고 초록색으로 표시 */
+.login-error.ok {
+    background-color: #e6f7ee;
+    color: #1f7a4a;
+    animation: none;
+}
+
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-6px); }
