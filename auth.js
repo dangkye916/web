@@ -25,6 +25,9 @@ const Auth = (() => {
     const CLASS_COUNT_KEY = "classCount";
 
     const DEFAULT_PASSWORD = "0000";   // 하위 관리자의 처음 비밀번호 / 초기화 비밀번호
+    const MIN_PASSWORD = 4;            // 새 비밀번호 최소 글자 수
+    const MAX_PASSWORD = 30;           // 새 비밀번호 최대 글자 수
+    const SUPER_PW_KEY = "superPasswords"; // 최고 관리자가 바꾼 비밀번호 (이 브라우저에만 저장)
     const SUB_ADMIN_KEY = "subAdmins"; // 하위 관리자 목록 저장 위치 (서버 연결할 때 이 부분만 바꾸면 돼요)
     const MAX_NAME = 20;
     const MAX_CLUB = 30;
@@ -113,10 +116,20 @@ const Auth = (() => {
         catch (e) { return false; }
     }
 
+    // 최고 관리자 비밀번호: 바꾼 값이 있으면 그 값, 없으면 코드에 적힌 값
+    // ※ 서버가 없는 지금은 바꾼 값이 이 브라우저에만 저장돼요. 코드의 비밀번호는 그대로라서 다른 기기에선 옛 비밀번호가 통해요.
+    function superPassword(id) {
+        try {
+            const saved = JSON.parse(localStorage.getItem(SUPER_PW_KEY));
+            if (saved && typeof saved[id] === "string" && saved[id] !== "") return saved[id];
+        } catch (e) { /* 무시 */ }
+        return ADMINS[id].password;
+    }
+
     // 관리자 정보 찾기 (최고 관리자 또는 하위 관리자), 없으면 null
     function adminRecord(id) {
         const s = normalize(id);
-        if (own(ADMINS, s)) return { type: "super", password: ADMINS[s].password, roles: [ADMINS[s].role], name: "" };
+        if (own(ADMINS, s)) return { type: "super", password: superPassword(s), roles: [ADMINS[s].role], name: "" };
         const sub = loadSubAdmins()[s];
         if (!sub) return null;
         const roles = [];
@@ -210,6 +223,40 @@ const Auth = (() => {
         if (!own(map, studentId)) return "not_found";
         map[studentId].password = DEFAULT_PASSWORD;
         return saveSubAdmins(map) ? "ok" : "error";
+    }
+
+    // ================= 내 비밀번호 변경 (최고 관리자·하위 관리자 공통) =================
+    // 결과: "ok" | "not_admin" | "wrong" | "too_short" | "too_long" | "default" | "same" | "mismatch" | "error"
+    function changePassword(oldPassword, newPassword, confirmPassword) {
+        const user = getUser();
+        if (!user || !user.isAdmin) return "not_admin";
+        const record = adminRecord(user.id);
+        if (!record) return "not_admin";
+
+        const current = String(oldPassword ?? "");
+        const next = String(newPassword ?? "");
+
+        if (record.password !== current) return "wrong";
+        if (next.length < MIN_PASSWORD) return "too_short";
+        if (next.length > MAX_PASSWORD) return "too_long";
+        if (next === DEFAULT_PASSWORD) return "default"; // 초기 비밀번호는 다시 쓸 수 없어요
+        if (next === current) return "same";
+        if (next !== String(confirmPassword ?? "")) return "mismatch";
+
+        try {
+            if (record.type === "super") {
+                let saved = {};
+                try { saved = JSON.parse(localStorage.getItem(SUPER_PW_KEY)) || {}; } catch (e) { saved = {}; }
+                saved[user.id] = next;
+                localStorage.setItem(SUPER_PW_KEY, JSON.stringify(saved));
+            } else {
+                const map = loadSubAdmins();
+                if (!own(map, user.id)) return "not_admin";
+                map[user.id].password = next;
+                if (!saveSubAdmins(map)) return "error";
+            }
+        } catch (e) { return "error"; }
+        return "ok";
     }
 
     // ================= 로그인 =================
@@ -332,7 +379,7 @@ const Auth = (() => {
     return {
         getClassCount, setClassCount, MAX_CLASS, MAX_NUMBER,
         listSubAdmins, addSubAdmin, updateSubAdmin, removeSubAdmin, resetSubAdminPassword,
-        roleLabel, DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB,
+        roleLabel, DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB, MIN_PASSWORD, MAX_PASSWORD, changePassword,
         login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea
     };
 
