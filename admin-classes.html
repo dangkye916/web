@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학년별 반 수 설정 - 학생회</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="survey.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <a class="logo" href="index.html">
+            <span class="logo-mark">🎓</span>
+            <span>학생회</span>
+        </a>
+        <div id="userArea" class="user-area"></div>
+    </header>
+
+    <main>
+        <a class="login-back" href="admin.html">← 관리자 페이지</a>
+
+        <section class="panel">
+            <h1>학년별 반 수 설정</h1>
+            <p class="meta">여기서 정한 반 수는 설문 대상 선택과 학번 로그인 검사에 쓰여요. 각 반은 30명(1~30번)까지 유효한 학번으로 처리돼요.</p>
+
+            <form id="classForm" autocomplete="off" style="max-width:420px">
+                <label for="classCount1">1학년 반 수</label>
+                <input type="number" id="classCount1" min="1" max="20" inputmode="numeric">
+
+                <label for="classCount2">2학년 반 수</label>
+                <input type="number" id="classCount2" min="1" max="20" inputmode="numeric">
+
+                <label for="classCount3">3학년 반 수</label>
+                <input type="number" id="classCount3" min="1" max="20" inputmode="numeric">
+
+                <button type="submit" class="login-submit">반 수 저장</button>
+                <p id="classMsg" class="login-error" hidden></p>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">© 학생회</footer>
+
+    <script src="auth.js"></script>
+    <script src="admin.js"></script>
+    <script>
+        // 권한이 없으면 관리자 페이지로 돌려보냄 (관리자가 아니면 메인으로)
+        if (AdminPage.guard("admin.manage")) {
+        Auth.renderUserArea(document.getElementById("userArea"));
+        const showMsg = AdminPage.showMsg;
+
+            // ---------- 학년별 반 수 ----------
+
+            const classMsg = document.getElementById("classMsg");
+            const classInputs = {
+                1: document.getElementById("classCount1"),
+                2: document.getElementById("classCount2"),
+                3: document.getElementById("classCount3")
+            };
+
+            function fillClassInputs() {
+                const counts = Auth.getClassCount();
+                for (const g of [1, 2, 3]) classInputs[g].value = counts[g];
+            }
+            fillClassInputs();
+
+            document.getElementById("classForm").addEventListener("submit", event => {
+                event.preventDefault();
+
+                const result = Auth.setClassCount({ 1: classInputs[1].value, 2: classInputs[2].value, 3: classInputs[3].value });
+
+                if (result === "ok") showMsg(classMsg, "저장했어요. 설문 대상 선택과 학번 검사에 바로 반영돼요.", true);
+                else if (result === "invalid") showMsg(classMsg, `반 수는 1~${Auth.MAX_CLASS} 사이의 정수로 입력해 주세요.`, false);
+                else if (result === "forbidden") showMsg(classMsg, "권한이 없어요.", false);
+                else showMsg(classMsg, "이 브라우저에서는 저장할 수 없어요.", false);
+
+                if (result !== "ok") fillClassInputs();
+            });
+        }
+
+    </script>
+</body>
+</html>
