@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>일정 관리 - 학생회</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="calendar-admin.css">
+    <link rel="stylesheet" href="calendar.css">
+    <link rel="stylesheet" href="admin-calendar.css">
 </head>
 <body>
 
@@ -112,7 +112,7 @@
         window.ADMIN_PAGE = true;
         if (!Auth.can("calendar.edit")) location.replace("index.html");
     </script>
-    <script src="script.js"></script>
+    <script src="calendar.js"></script>
     <script>
         document.querySelector(".calendar").classList.add("admin-view");
     </script>
