@@ -10,7 +10,7 @@
 <body>
 
     <header class="site-header">
-        <a class="logo" href="index.html">
+        <a class="logo" href="main.html">
             <span class="logo-mark">🎓</span>
             <span>학생회</span>
         </a>
@@ -18,7 +18,7 @@
     </header>
 
     <main>
-        <a class="login-back" href="index.html">← 메인으로</a>
+        <a class="login-back" href="main.html">← 메인으로</a>
 
         <h1 style="margin:0 0 12px;font-size:26px;font-weight:900">관리자 페이지</h1>
 
@@ -86,7 +86,7 @@
     <script>
         // 관리자가 아니면 메인으로 돌려보냄
         if (!Auth.can("admin.manage")) {
-            location.replace("index.html");
+            location.replace("main.html");
         }
 
         Auth.renderUserArea(document.getElementById("userArea"));
