@@ -20,386 +20,132 @@
     <main>
         <a class="login-back" href="index.html">← 메인으로</a>
 
-        <h1 style="margin:0 0 12px;font-size:26px;font-weight:900">관리자 페이지</h1>
+        <h1 style="margin:0 0 4px;font-size:26px;font-weight:900">관리자 페이지</h1>
+        <p class="meta" style="margin:0 0 8px">관리할 항목을 선택해 주세요.</p>
 
-        <!-- data-perm: 그 권한이 없는 관리자에게는 항목이 보이지 않아요 -->
+        <!-- data-perm: 그 권한이 없는 관리자에게는 카드가 보이지 않아요.
+             새 기능은 menu-card를 아래 그룹에 추가하고 data-perm에 권한 이름을 적으면 돼요
+             (예: 축제 부스 "booth.manage", 학교 규정 "regulation.edit") -->
         <p id="noFeature" class="meta" hidden>지금 사용할 수 있는 관리 기능이 없어요. (축제 부스·학교 규정 기능은 준비 중이에요)</p>
 
-        <div class="admin-grid">
+        <section class="admin-group">
+            <h2 class="admin-group-title">콘텐츠 관리</h2>
+            <div class="admin-grid">
 
-            <a class="menu-card" href="admin-calendar.html" data-perm="calendar.edit">
-                <span class="menu-icon icon-calendar">📅</span>
-                <span class="menu-text">
-                    <h2>일정 관리</h2>
-                    <p>일정을 추가·수정·삭제해요</p>
-                </span>
-                <span class="menu-arrow">›</span>
-            </a>
+                <a class="menu-card" href="admin-calendar.html" data-perm="calendar.edit">
+                    <span class="menu-icon icon-calendar">📅</span>
+                    <span class="menu-text">
+                        <h2>일정 관리</h2>
+                        <p>일정을 추가·수정·삭제해요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-            <a class="menu-card" href="admin-survey.html" data-perm="survey.create">
-                <span class="menu-icon icon-vote">📝</span>
-                <span class="menu-text">
-                    <h2>설문조사 관리</h2>
-                    <p>설문을 만들고, 결과를 보고, 삭제해요</p>
-                </span>
-                <span class="menu-arrow">›</span>
-            </a>
+                <a class="menu-card" href="admin-survey.html" data-perm="survey.create">
+                    <span class="menu-icon icon-vote">📝</span>
+                    <span class="menu-text">
+                        <h2>설문조사 관리</h2>
+                        <p>설문을 만들고, 결과를 보고, 삭제해요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-            <!-- 부스·학교 규정 등 다른 기능은 합칠 때 위와 같은 menu-card를 여기에 추가하면 돼요
-                 (data-perm에 "booth.manage", "regulation.edit" 같은 권한 이름을 적어 주세요) -->
+            </div>
+        </section>
 
-            <section class="panel wide" data-perm="admin.manage">
-                <h2 style="margin:0 0 4px;font-size:19px">학년별 반 수 설정</h2>
-                <p class="meta">여기서 정한 반 수는 설문 대상 선택과 학번 로그인 검사에 쓰여요. 각 반은 30명(1~30번)까지 유효한 학번으로 처리돼요.</p>
+        <section class="admin-group">
+            <h2 class="admin-group-title">사이트 설정</h2>
+            <div class="admin-grid">
 
-                <form id="classForm" autocomplete="off">
-                    <label for="classCount1">1학년 반 수</label>
-                    <input type="number" id="classCount1" min="1" max="20" inputmode="numeric">
+                <a class="menu-card" href="admin-classes.html" data-perm="admin.manage">
+                    <span class="menu-icon icon-rules">🏫</span>
+                    <span class="menu-text">
+                        <h2>학년별 반 수</h2>
+                        <p id="classSummary">학년별 반 수를 설정해요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-                    <label for="classCount2">2학년 반 수</label>
-                    <input type="number" id="classCount2" min="1" max="20" inputmode="numeric">
+                <a class="menu-card" href="admin-links.html" data-perm="admin.manage">
+                    <span class="menu-icon icon-link">🔗</span>
+                    <span class="menu-text">
+                        <h2>바로가기 링크</h2>
+                        <p id="linkSummary">메인 화면 버튼의 주소를 설정해요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-                    <label for="classCount3">3학년 반 수</label>
-                    <input type="number" id="classCount3" min="1" max="20" inputmode="numeric">
+            </div>
+        </section>
 
-                    <button type="submit" class="login-submit">반 수 저장</button>
-                    <p id="classMsg" class="login-error" hidden></p>
-                </form>
-            </section>
+        <section class="admin-group">
+            <h2 class="admin-group-title">관리자 계정</h2>
+            <div class="admin-grid">
 
-            <section class="panel wide" data-perm="admin.manage">
-                <h2 style="margin:0 0 4px;font-size:19px">바로가기 링크 설정</h2>
-                <p class="meta">메인 화면의 작은 버튼에 연결될 주소예요. 비워서 저장하면 링크가 지워져요.</p>
+                <a class="menu-card" href="admin-subadmins.html" data-perm="admin.manage">
+                    <span class="menu-icon icon-booth">👥</span>
+                    <span class="menu-text">
+                        <h2>하위 관리자</h2>
+                        <p id="subAdminSummary">관리자를 지정하고 권한을 관리해요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-                <form id="linksForm" autocomplete="off">
-                    <label for="schoolLink">학교 공식 사이트</label>
-                    <input type="text" id="schoolLink" placeholder="https://..." maxlength="300" inputmode="url">
+                <a class="menu-card" href="admin-password.html">
+                    <span class="menu-icon icon-key">🔑</span>
+                    <span class="menu-text">
+                        <h2>내 비밀번호 변경</h2>
+                        <p>로그인 비밀번호를 바꿔요</p>
+                    </span>
+                    <span class="menu-arrow">›</span>
+                </a>
 
-                    <label for="instagramLink">학생회 인스타그램</label>
-                    <input type="text" id="instagramLink" placeholder="https://www.instagram.com/..." maxlength="300" inputmode="url">
-
-                    <button type="submit" class="login-submit">링크 저장</button>
-                    <p id="linksMsg" class="login-error" hidden></p>
-                </form>
-            </section>
-
-            <section class="panel wide" data-perm="admin.manage">
-                <h2 style="margin:0 0 4px;font-size:19px">하위 관리자 지정</h2>
-                <p class="meta">
-                    지정된 사람은 학번과 비밀번호(처음엔 0000)로 로그인하면 관리자 페이지를 쓸 수 있어요.
-                    학교 규정·축제 부스 기능은 아직 없어서 권한만 저장돼요.
-                    지금은 이 브라우저에만 저장돼서, 다른 기기에서는 적용되지 않아요.
-                </p>
-
-                <form id="subAdminForm" autocomplete="off">
-                    <label for="subAdminName">이름</label>
-                    <input type="text" id="subAdminName" maxlength="20" placeholder="이름">
-
-                    <label for="subAdminId">학번</label>
-                    <input type="text" id="subAdminId" inputmode="numeric" maxlength="5" placeholder="5자리 학번">
-
-                    <label>역할 (둘 다 선택할 수도 있어요)</label>
-                    <label class="option">
-                        <input type="checkbox" id="roleOfficer">
-                        <span>학생회 임원 <span class="meta" style="margin:0">— 일정 · 설문조사 · 학교 규정</span></span>
-                    </label>
-                    <label class="option">
-                        <input type="checkbox" id="roleClub">
-                        <span>동아리 부장 <span class="meta" style="margin:0">— 축제 부스 예약</span></span>
-                    </label>
-
-                    <div id="clubBlock" hidden>
-                        <label for="clubName">동아리명</label>
-                        <input type="text" id="clubName" maxlength="30" placeholder="동아리명">
-                    </div>
-
-                    <div class="row">
-                        <button type="submit" class="login-submit" id="subAdminSubmit">지정하기</button>
-                        <button type="button" class="secondary-button" id="subAdminCancel" hidden>수정 취소</button>
-                    </div>
-                    <p id="subAdminMsg" class="login-error" hidden></p>
-                </form>
-            </section>
-
-            <section class="panel wide" data-perm="admin.manage">
-                <h2 style="margin:0 0 4px;font-size:19px">하위 관리자 목록</h2>
-
-                <p id="subAdminEmpty" class="meta">지정된 하위 관리자가 없어요.</p>
-
-                <div id="subAdminTableWrap" class="table-wrap" hidden>
-                    <table class="people-table">
-                        <thead>
-                            <tr><th>이름</th><th>학번</th><th>관리자 형태</th><th>관리</th></tr>
-                        </thead>
-                        <tbody id="subAdminRows"></tbody>
-                    </table>
-                </div>
-
-                <p id="subListMsg" class="login-error" hidden></p>
-            </section>
-
-        </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">© 학생회</footer>
 
     <script src="auth.js"></script>
+    <script src="admin.js"></script>
     <script>
         // 관리자(최고 관리자·하위 관리자)가 아니면 메인으로 돌려보냄
-        if (!Auth.isAdmin()) {
-            location.replace("index.html");
-        }
+        if (AdminPage.guard(null)) {
 
-        Auth.renderUserArea(document.getElementById("userArea"));
+            Auth.renderUserArea(document.getElementById("userArea"));
 
-        // 권한이 없는 항목은 화면에서 없애요
-        document.querySelectorAll("[data-perm]").forEach(el => {
-            if (!Auth.can(el.dataset.perm)) el.remove();
-        });
-        if (!document.querySelector("[data-perm]")) {
-            document.getElementById("noFeature").hidden = false;
-        }
-
-        // 안내 문구 표시 (ok면 초록색, 아니면 빨간색 + 떨림)
-        function showMsg(el, text, ok) {
-            el.textContent = text;
-            el.classList.toggle("ok", ok);
-            el.hidden = false;
-        }
-
-        // ========== 최고 관리자 전용 기능 ==========
-        if (Auth.can("admin.manage")) {
-
-            // ---------- 학년별 반 수 ----------
-
-            const classMsg = document.getElementById("classMsg");
-            const classInputs = {
-                1: document.getElementById("classCount1"),
-                2: document.getElementById("classCount2"),
-                3: document.getElementById("classCount3")
-            };
-
-            function fillClassInputs() {
-                const counts = Auth.getClassCount();
-                for (const g of [1, 2, 3]) classInputs[g].value = counts[g];
-            }
-            fillClassInputs();
-
-            document.getElementById("classForm").addEventListener("submit", event => {
-                event.preventDefault();
-
-                const result = Auth.setClassCount({ 1: classInputs[1].value, 2: classInputs[2].value, 3: classInputs[3].value });
-
-                if (result === "ok") showMsg(classMsg, "저장했어요. 설문 대상 선택과 학번 검사에 바로 반영돼요.", true);
-                else if (result === "invalid") showMsg(classMsg, `반 수는 1~${Auth.MAX_CLASS} 사이의 정수로 입력해 주세요.`, false);
-                else if (result === "forbidden") showMsg(classMsg, "권한이 없어요.", false);
-                else showMsg(classMsg, "이 브라우저에서는 저장할 수 없어요.", false);
-
-                if (result !== "ok") fillClassInputs();
+            // 권한이 없는 카드는 없애고, 카드가 하나도 안 남은 묶음은 제목까지 없애요
+            document.querySelectorAll("[data-perm]").forEach(el => {
+                if (!Auth.can(el.dataset.perm)) el.remove();
             });
-
-            // ---------- 바로가기 링크 ----------
-
-            const schoolInput = document.getElementById("schoolLink");
-            const instagramInput = document.getElementById("instagramLink");
-            const linksMsg = document.getElementById("linksMsg");
-
-            // http / https 주소만 허용. 비어 있으면 "", 올바르지 않으면 null
-            function normalizeLink(value) {
-                const text = String(value ?? "").trim();
-                if (text === "") return "";
-
-                const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text) ? text : `https://${text}`;
-
-                try {
-                    const url = new URL(withScheme);
-                    return (url.protocol === "https:" || url.protocol === "http:") ? url.href : null;
-                } catch (error) {
-                    return null;
-                }
-            }
-
-            let savedLinks = {};
-            try { savedLinks = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (error) { savedLinks = {}; }
-
-            schoolInput.value = savedLinks.school || "";
-            instagramInput.value = savedLinks.instagram || "";
-
-            document.getElementById("linksForm").addEventListener("submit", event => {
-                event.preventDefault();
-
-                if (!Auth.can("admin.manage")) return;
-
-                const school = normalizeLink(schoolInput.value);
-                const instagram = normalizeLink(instagramInput.value);
-
-                if (school === null || instagram === null) {
-                    showMsg(linksMsg, "https://로 시작하는 올바른 주소를 입력해 주세요.", false);
-                    return;
-                }
-
-                localStorage.setItem("siteLinks", JSON.stringify({ school, instagram }));
-                schoolInput.value = school;
-                instagramInput.value = instagram;
-                showMsg(linksMsg, "저장했어요. 메인 화면 버튼에 바로 반영돼요.", true);
+            document.querySelectorAll(".admin-group").forEach(group => {
+                if (!group.querySelector(".menu-card")) group.remove();
             });
-
-            // ---------- 하위 관리자 ----------
-
-            const subForm = document.getElementById("subAdminForm");
-            const nameInput = document.getElementById("subAdminName");
-            const idInput = document.getElementById("subAdminId");
-            const officerBox = document.getElementById("roleOfficer");
-            const clubBox = document.getElementById("roleClub");
-            const clubBlock = document.getElementById("clubBlock");
-            const clubInput = document.getElementById("clubName");
-            const submitBtn = document.getElementById("subAdminSubmit");
-            const cancelBtn = document.getElementById("subAdminCancel");
-            const subMsg = document.getElementById("subAdminMsg");
-
-            const listMsg = document.getElementById("subListMsg");
-            const emptyText = document.getElementById("subAdminEmpty");
-            const tableWrap = document.getElementById("subAdminTableWrap");
-            const rowsBody = document.getElementById("subAdminRows");
-
-            let editingId = null; // 수정 중인 학번 (null이면 새로 지정하는 중)
-
-            const errorText = {
-                invalid_id: "잘못된 입력이에요. 존재하지 않는 학번이에요.",
-                super_id: "최고 관리자 학번은 하위 관리자로 지정할 수 없어요.",
-                duplicate: "이미 하위 관리자로 지정된 학번이에요. 아래 목록에서 수정해 주세요.",
-                invalid_name: `이름을 1~${Auth.MAX_NAME}자로 입력해 주세요.`,
-                no_role: "역할을 하나 이상 선택해 주세요.",
-                no_club: `동아리명을 1~${Auth.MAX_CLUB}자로 입력해 주세요.`,
-                not_found: "이미 목록에서 사라진 관리자예요.",
-                forbidden: "권한이 없어요.",
-                error: "이 브라우저에서는 저장할 수 없어요."
-            };
-
-            function resetSubForm() {
-                editingId = null;
-                subForm.reset();
-                idInput.readOnly = false;
-                clubBlock.hidden = true;
-                submitBtn.textContent = "지정하기";
-                cancelBtn.hidden = true;
-                subMsg.hidden = true;
+            // 권한이 필요한 기능이 하나도 없으면 안내 (비밀번호 변경은 항상 있어요)
+            if (!document.querySelector("[data-perm]")) {
+                document.getElementById("noFeature").hidden = false;
             }
 
-            // 숫자만 입력
-            idInput.addEventListener("input", () => {
-                idInput.value = idInput.value.replace(/\D/g, "");
-                subMsg.hidden = true;
-            });
-            clubBox.addEventListener("change", () => { clubBlock.hidden = !clubBox.checked; });
-            cancelBtn.addEventListener("click", resetSubForm);
-
-            subForm.addEventListener("submit", event => {
-                event.preventDefault();
-                listMsg.hidden = true;
-
-                const data = {
-                    name: nameInput.value,
-                    officer: officerBox.checked,
-                    clubLeader: clubBox.checked,
-                    club: clubInput.value
-                };
-
-                const wasEditing = editingId !== null;
-                const result = wasEditing ? Auth.updateSubAdmin(editingId, data) : Auth.addSubAdmin(idInput.value, data);
-
-                if (result !== "ok") {
-                    showMsg(subMsg, errorText[result] || errorText.error, false);
-                    if (result === "not_found") { resetSubForm(); renderSubAdmins(); }
-                    return;
-                }
-
-                const who = data.name.trim();
-                resetSubForm();
-                showMsg(subMsg, wasEditing
-                    ? `${who}님의 정보를 수정했어요.`
-                    : `${who}님을 하위 관리자로 지정했어요. 처음 비밀번호는 ${Auth.DEFAULT_PASSWORD}이에요.`, true);
-                renderSubAdmins();
-            });
-
-            function startEdit(admin) {
-                editingId = admin.id;
-                nameInput.value = admin.name;
-                idInput.value = admin.id;
-                idInput.readOnly = true; // 학번은 바꿀 수 없어요 (바꾸려면 해제 후 다시 지정)
-                officerBox.checked = admin.officer;
-                clubBox.checked = admin.clubLeader;
-                clubInput.value = admin.club;
-                clubBlock.hidden = !admin.clubLeader;
-                submitBtn.textContent = "수정 저장";
-                cancelBtn.hidden = false;
-                subMsg.hidden = true;
-                listMsg.hidden = true;
-                subForm.scrollIntoView({ behavior: "smooth", block: "center" });
-                nameInput.focus();
+            // 카드에 현재 상태를 요약해서 보여줘요
+            const classSummary = document.getElementById("classSummary");
+            if (classSummary) {
+                const c = Auth.getClassCount();
+                classSummary.textContent = `1학년 ${c[1]}반 · 2학년 ${c[2]}반 · 3학년 ${c[3]}반`;
             }
 
-            function resetPassword(admin) {
-                if (!confirm(`${admin.name}(${admin.id})님의 비밀번호를 ${Auth.DEFAULT_PASSWORD}으로 초기화할까요?`)) return;
-                const result = Auth.resetSubAdminPassword(admin.id);
-                showMsg(listMsg, result === "ok"
-                    ? `${admin.name}님의 비밀번호를 ${Auth.DEFAULT_PASSWORD}으로 초기화했어요.`
-                    : (errorText[result] || errorText.error), result === "ok");
+            const linkSummary = document.getElementById("linkSummary");
+            if (linkSummary) {
+                let links = {};
+                try { links = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (e) { links = {}; }
+                const set = [links.school && "학교 사이트", links.instagram && "인스타그램"].filter(Boolean);
+                linkSummary.textContent = set.length ? `설정됨: ${set.join(", ")}` : "아직 설정된 링크가 없어요";
             }
 
-            function removeAdmin(admin) {
-                if (!confirm(`${admin.name}(${admin.id})님의 관리자 권한을 없앨까요?\n해제하면 일반 학생으로 돌아가요.`)) return;
-                const result = Auth.removeSubAdmin(admin.id);
-                if (result === "ok" && editingId === admin.id) resetSubForm();
-                renderSubAdmins();
-                showMsg(listMsg, result === "ok"
-                    ? `${admin.name}님의 관리자 권한을 없앴어요.`
-                    : (errorText[result] || errorText.error), result === "ok");
+            const subAdminSummary = document.getElementById("subAdminSummary");
+            if (subAdminSummary) {
+                const n = Auth.listSubAdmins().length;
+                subAdminSummary.textContent = n ? `하위 관리자 ${n}명` : "지정된 하위 관리자가 없어요";
             }
-
-            function cell(text) {
-                const td = document.createElement("td");
-                td.textContent = text; // 입력값은 글자로만 넣어서 HTML이 실행되지 않게 함
-                return td;
-            }
-
-            function actionButton(label, className, onClick) {
-                const b = document.createElement("button");
-                b.type = "button";
-                b.className = className;
-                b.style.margin = "0";
-                b.textContent = label;
-                b.addEventListener("click", onClick);
-                return b;
-            }
-
-            function renderSubAdmins() {
-                const list = Auth.listSubAdmins();
-
-                rowsBody.innerHTML = "";
-                emptyText.hidden = list.length > 0;
-                tableWrap.hidden = list.length === 0;
-
-                list.forEach(admin => {
-                    const tr = document.createElement("tr");
-                    tr.append(cell(admin.name), cell(admin.id), cell(admin.label));
-
-                    const actions = document.createElement("td");
-                    const box = document.createElement("div");
-                    box.className = "row";
-                    box.style.margin = "0";
-                    box.append(
-                        actionButton("수정", "secondary-button", () => startEdit(admin)),
-                        actionButton(`비밀번호 ${Auth.DEFAULT_PASSWORD} 초기화`, "secondary-button", () => resetPassword(admin)),
-                        actionButton("관리자 해제", "danger-button", () => removeAdmin(admin)));
-                    actions.append(box);
-                    tr.append(actions);
-
-                    rowsBody.append(tr);
-                });
-            }
-
-            renderSubAdmins();
         }
     </script>
 </body>
