@@ -66,7 +66,7 @@ loginForm.addEventListener("submit", event => {
     // ---- 2단계: 관리자 비밀번호 ----
     if (passwordStep) {
         const result = Auth.loginAdmin(studentId, passwordInput.value);
-        if (result === "ok") { location.href = "main.html"; return; }
+        if (result === "ok") { location.href = "index.html"; return; }
         showError(result === "wrong"
             ? "비밀번호가 맞지 않아요. 다시 입력해 주세요."
             : "이 브라우저에서는 로그인 정보를 저장할 수 없어요.");
@@ -86,7 +86,7 @@ loginForm.addEventListener("submit", event => {
     }
     if (result === "need_password") { setStep(true); return; }
 
-    location.href = "main.html";
+    location.href = "index.html";
 });
 
 logoutButton.addEventListener("click", () => {
