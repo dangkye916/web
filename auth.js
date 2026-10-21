@@ -6,9 +6,15 @@ const Auth = (() => {
         "20304": { password: "stella59!!", role: "super" }
     };
 
-    // 역할별 권한 (지금은 최고 관리자만)
+    // 역할별 권한
+    //  - super      : 최고 관리자 (모든 권한 + 관리자 관리)
+    //  - officer    : 학생회 임원 (일정 / 설문조사 / 학교 규정 정리)
+    //  - clubLeader : 동아리 부장 (축제 부스 예약)
+    // ※ regulation.edit(학교 규정), booth.manage(축제 부스)는 아직 기능이 없어서 권한만 정해 둔 상태예요.
     const PERMISSIONS = {
-        super: ["calendar.edit", "survey.create", "survey.delete", "survey.results", "admin.manage"]
+        super: ["calendar.edit", "survey.create", "survey.delete", "survey.results", "admin.manage"],
+        officer: ["calendar.edit", "survey.create", "survey.delete", "survey.results", "regulation.edit"],
+        clubLeader: ["booth.manage"]
     };
 
     // ★ 학년별 반 수 기본값. 관리자 페이지에서 바꾸면 그 값이 우선 적용돼요.
@@ -18,11 +24,20 @@ const Auth = (() => {
     const MAX_NUMBER = 30;         // 반마다 번호는 1~30번까지 유효 (인원 30명 고정)
     const CLASS_COUNT_KEY = "classCount";
 
+    const DEFAULT_PASSWORD = "0000";   // 하위 관리자의 처음 비밀번호 / 초기화 비밀번호
+    const SUB_ADMIN_KEY = "subAdmins"; // 하위 관리자 목록 저장 위치 (서버 연결할 때 이 부분만 바꾸면 돼요)
+    const MAX_NAME = 20;
+    const MAX_CLUB = 30;
+
     const STUDENT_ID_PATTERN = /^\d{5}$/;
     const ID_KEY = "currentStudentId";
     const ADMIN_KEY = "adminVerifiedId"; // 비밀번호까지 통과한 관리자 학번
 
+    const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
     function normalize(id) { return String(id ?? "").trim(); }
+
+    // ================= 학년별 반 수 =================
+
     // 현재 학년별 반 수 { 1: n, 2: n, 3: n }
     function getClassCount() {
         let saved = null;
@@ -35,7 +50,7 @@ const Auth = (() => {
         return result;
     }
 
-    // 관리자만 변경 가능. "ok" | "forbidden" | "invalid" | "error"
+    // 최고 관리자만 변경 가능. "ok" | "forbidden" | "invalid" | "error"
     function setClassCount(counts) {
         if (!can("admin.manage")) return "forbidden";
         const next = {};
@@ -47,6 +62,8 @@ const Auth = (() => {
         try { localStorage.setItem(CLASS_COUNT_KEY, JSON.stringify(next)); } catch (e) { return "error"; }
         return "ok";
     }
+
+    // ================= 학번 검사 =================
 
     // 5자리 숫자이고, 우리 학교에 있을 수 있는 학년/반/번호인지 검사
     // (관리자 학번은 반 수 설정과 상관없이 항상 유효 → 설정 실수로 관리자가 잠기는 일 방지)
@@ -62,13 +79,140 @@ const Auth = (() => {
         return true;
     }
 
-    function isAdminId(id) { return Object.prototype.hasOwnProperty.call(ADMINS, normalize(id)); }
-
     // 학번 → 학년/반/번호 (10101 → 1학년 1반 1번)
     function parseId(id) {
         const s = normalize(id);
         return { grade: Number(s[0]), cls: Number(s.slice(1, 3)), num: Number(s.slice(3, 5)) };
     }
+
+    // ================= 하위 관리자 저장소 =================
+    // 형태: { "학번": { name, officer, clubLeader, club, password } }
+    // ※ 지금은 이 브라우저에만 저장돼요. 서버를 연결하면 아래 load/save만 바꾸면 돼요.
+
+    function loadSubAdmins() {
+        let raw = null;
+        try { raw = JSON.parse(localStorage.getItem(SUB_ADMIN_KEY)); } catch (e) { raw = null; }
+        const result = {};
+        if (!raw || typeof raw !== "object") return result;
+        for (const id of Object.keys(raw)) {
+            const r = raw[id];
+            if (!STUDENT_ID_PATTERN.test(id) || !r || typeof r !== "object") continue;
+            result[id] = {
+                name: String(r.name ?? ""),
+                officer: Boolean(r.officer),
+                clubLeader: Boolean(r.clubLeader),
+                club: String(r.club ?? ""),
+                password: typeof r.password === "string" && r.password !== "" ? r.password : DEFAULT_PASSWORD
+            };
+        }
+        return result;
+    }
+
+    function saveSubAdmins(map) {
+        try { localStorage.setItem(SUB_ADMIN_KEY, JSON.stringify(map)); return true; }
+        catch (e) { return false; }
+    }
+
+    // 관리자 정보 찾기 (최고 관리자 또는 하위 관리자), 없으면 null
+    function adminRecord(id) {
+        const s = normalize(id);
+        if (own(ADMINS, s)) return { type: "super", password: ADMINS[s].password, roles: [ADMINS[s].role], name: "" };
+        const sub = loadSubAdmins()[s];
+        if (!sub) return null;
+        const roles = [];
+        if (sub.officer) roles.push("officer");
+        if (sub.clubLeader) roles.push("clubLeader");
+        return { type: "sub", password: sub.password, roles, name: sub.name };
+    }
+
+    function isAdminId(id) { return adminRecord(id) !== null; }
+
+    // 관리자 형태 문구: "학생회 임원", "동아리부장(동아리명)", 둘 다면 쉼표로 이어서
+    function roleLabel(sub) {
+        const parts = [];
+        if (sub.officer) parts.push("학생회 임원");
+        if (sub.clubLeader) parts.push(`동아리부장(${sub.club})`);
+        return parts.join(", ");
+    }
+
+    // 입력값 검사 → 에러 코드 또는 null
+    function checkSubAdminInput(data) {
+        const name = String(data?.name ?? "").trim();
+        if (name === "" || name.length > MAX_NAME) return "invalid_name";
+        if (!data.officer && !data.clubLeader) return "no_role";
+        const club = String(data?.club ?? "").trim();
+        if (data.clubLeader && (club === "" || club.length > MAX_CLUB)) return "no_club";
+        return null;
+    }
+
+    function cleanSubAdmin(data, password) {
+        return {
+            name: String(data.name).trim(),
+            officer: Boolean(data.officer),
+            clubLeader: Boolean(data.clubLeader),
+            club: data.clubLeader ? String(data.club).trim() : "",
+            password
+        };
+    }
+
+    // 목록 (최고 관리자만 볼 수 있어요). 비밀번호는 내보내지 않아요. 학번 순.
+    function listSubAdmins() {
+        if (!can("admin.manage")) return [];
+        const map = loadSubAdmins();
+        return Object.keys(map).sort().map(id => {
+            const { name, officer, clubLeader, club } = map[id];
+            return { id, name, officer, clubLeader, club, label: roleLabel({ officer, clubLeader, club }) };
+        });
+    }
+
+    // 하위 관리자 지정. 결과: "ok" | "forbidden" | "invalid_id" | "super_id" | "duplicate"
+    //                      | "invalid_name" | "no_role" | "no_club" | "error"
+    function addSubAdmin(id, data) {
+        if (!can("admin.manage")) return "forbidden";
+        const studentId = normalize(id);
+        if (own(ADMINS, studentId)) return "super_id";
+        if (!isValidId(studentId)) return "invalid_id";
+        const map = loadSubAdmins();
+        if (own(map, studentId)) return "duplicate";
+        const bad = checkSubAdminInput(data);
+        if (bad) return bad;
+        map[studentId] = cleanSubAdmin(data, DEFAULT_PASSWORD);
+        return saveSubAdmins(map) ? "ok" : "error";
+    }
+
+    // 하위 관리자 수정 (이름·역할·동아리명). 비밀번호는 그대로 유지.
+    function updateSubAdmin(id, data) {
+        if (!can("admin.manage")) return "forbidden";
+        const studentId = normalize(id);
+        const map = loadSubAdmins();
+        if (!own(map, studentId)) return "not_found";
+        const bad = checkSubAdminInput(data);
+        if (bad) return bad;
+        map[studentId] = cleanSubAdmin(data, map[studentId].password);
+        return saveSubAdmins(map) ? "ok" : "error";
+    }
+
+    // 하위 관리자 해제 (관리자 권한 삭제)
+    function removeSubAdmin(id) {
+        if (!can("admin.manage")) return "forbidden";
+        const studentId = normalize(id);
+        const map = loadSubAdmins();
+        if (!own(map, studentId)) return "not_found";
+        delete map[studentId];
+        return saveSubAdmins(map) ? "ok" : "error";
+    }
+
+    // 비밀번호를 0000으로 초기화
+    function resetSubAdminPassword(id) {
+        if (!can("admin.manage")) return "forbidden";
+        const studentId = normalize(id);
+        const map = loadSubAdmins();
+        if (!own(map, studentId)) return "not_found";
+        map[studentId].password = DEFAULT_PASSWORD;
+        return saveSubAdmins(map) ? "ok" : "error";
+    }
+
+    // ================= 로그인 =================
 
     // 1단계: 학번 입력 → "invalid" | "need_password" | "ok" | "error"
     function login(id) {
@@ -85,7 +229,7 @@ const Auth = (() => {
     // 2단계: 관리자 비밀번호 → "ok" | "wrong" | "error"
     function loginAdmin(id, password) {
         const studentId = normalize(id);
-        const admin = ADMINS[studentId];
+        const admin = adminRecord(studentId);
         if (!admin || admin.password !== String(password ?? "")) return "wrong";
         try {
             localStorage.setItem(ID_KEY, studentId);
@@ -101,7 +245,9 @@ const Auth = (() => {
         } catch (e) { /* 무시 */ }
     }
 
-    // 현재 사용자 { id, isAdmin, role } 또는 null
+    // 현재 사용자 { id, isAdmin, role, roles } 또는 null
+    //  role : "super" | "sub" | "student"
+    //  roles: 가진 역할 목록 (예: ["officer", "clubLeader"])
     function getUser() {
         let id = null, verified = null;
         try {
@@ -111,11 +257,17 @@ const Auth = (() => {
 
         if (!id || !isValidId(id)) return null;
 
-        const isAdmin = isAdminId(id) && verified === id;
+        const record = adminRecord(id);
+        const isAdmin = Boolean(record) && verified === id;
         // 관리자 학번인데 비밀번호를 통과 못 했으면 로그인 안 된 걸로 처리
-        if (isAdminId(id) && !isAdmin) return null;
+        if (record && !isAdmin) return null;
 
-        return { id, isAdmin, role: isAdmin ? ADMINS[id].role : "student" };
+        return {
+            id,
+            isAdmin,
+            role: isAdmin ? (record.type === "super" ? "super" : "sub") : "student",
+            roles: isAdmin ? record.roles : []
+        };
     }
 
     function isAdmin() {
@@ -123,11 +275,11 @@ const Auth = (() => {
         return Boolean(user && user.isAdmin);
     }
 
-    // 권한 검사: Auth.can("survey.create")
+    // 권한 검사: Auth.can("survey.create") — 가진 역할 중 하나라도 허용하면 true
     function can(permission) {
         const user = getUser();
         if (!user || !user.isAdmin) return false;
-        return (PERMISSIONS[user.role] || []).includes(permission);
+        return user.roles.some(role => (PERMISSIONS[role] || []).includes(permission));
     }
 
     // 오른쪽 위 사용자 영역
@@ -177,6 +329,11 @@ const Auth = (() => {
         container.appendChild(out);
     }
 
-    return { getClassCount, setClassCount, MAX_CLASS, MAX_NUMBER, login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea };
+    return {
+        getClassCount, setClassCount, MAX_CLASS, MAX_NUMBER,
+        listSubAdmins, addSubAdmin, updateSubAdmin, removeSubAdmin, resetSubAdminPassword,
+        roleLabel, DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB,
+        login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea
+    };
 
 })();
