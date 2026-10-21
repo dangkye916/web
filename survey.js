@@ -49,7 +49,7 @@ Auth.renderUserArea(document.getElementById("userArea"));
 // 관리 기능(생성·결과·삭제)은 관리자 페이지(admin-survey.html)에서만 켜짐.
 // 메인에서 들어온 설문 페이지는 관리자도 일반 학생과 똑같이 참여해요.
 const MANAGE = window.ADMIN_PAGE === true && Auth.can("survey.create");
-if (window.ADMIN_PAGE === true && !MANAGE) location.replace("main.html");
+if (window.ADMIN_PAGE === true && !MANAGE) location.replace("index.html");
 
 function h(tag, props = {}, ...kids) {
     const el = document.createElement(tag);
