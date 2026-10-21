@@ -79,7 +79,7 @@ loginForm.addEventListener("submit", event => {
 
     const result = Auth.login(studentId);
 
-    if (result === "invalid") { showError("학번은 5자리 숫자로 입력해 주세요."); return; }
+    if (result === "invalid") { showError("잘못된 입력이에요. 존재하지 않는 학번이니 다시 확인해 주세요."); return; }
     if (result === "error") {
         showError("이 브라우저에서는 로그인 정보를 저장할 수 없어요. 쿠키/사이트 데이터 차단 설정을 확인해 주세요.");
         return;
