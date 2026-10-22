@@ -36,7 +36,7 @@
         <div id="days" class="days"></div>
     </div>
 
-    <!-- 날짜별 일정 팝업 (목록 + 추가/수정 폼) -->
+    <!-- 날짜별 일정 관리 창: 그 날의 일정 목록 + 각 일정의 수정/삭제 + 일정 추가 버튼 -->
     <div id="popup" class="popup">
         <div class="popup-content">
 
@@ -46,8 +46,19 @@
 
             <div id="scheduleList"></div>
 
+            <button type="button" id="addScheduleButton" class="add-schedule-button">＋ 일정 추가</button>
+
+        </div>
+    </div>
+
+    <!-- 일정 추가/수정 창 (새 창으로 떠요) -->
+    <div id="editorPopup" class="popup">
+        <div class="popup-content">
+
+            <button id="closeEditor" class="close" aria-label="닫기">&times;</button>
+
             <form id="scheduleForm" class="schedule-form" autocomplete="off">
-                <h4 id="formTitle">새 일정 추가</h4>
+                <h4 id="formTitle">일정 추가</h4>
 
                 <label for="titleInput">제목</label>
                 <input type="text" id="titleInput" placeholder="일정 제목" maxlength="100">
@@ -65,43 +76,10 @@
                 <input type="text" id="linkInput" placeholder="인스타 게시물 등 링크 (https://...)" maxlength="300" inputmode="url">
 
                 <div class="form-buttons">
-                    <button type="submit" id="saveSchedule">일정 추가</button>
-                    <button type="button" id="cancelEdit" class="cancel-button" hidden>수정 취소</button>
+                    <button type="submit" id="saveSchedule">추가하기</button>
+                    <button type="button" id="cancelEdit" class="cancel-button">취소</button>
                 </div>
             </form>
-
-        </div>
-    </div>
-
-    <!-- 일정 상세 팝업 -->
-    <div id="detailPopup" class="popup">
-        <div class="popup-content">
-
-            <button id="closeDetail" class="close" aria-label="닫기">&times;</button>
-
-            <h3 id="detailTitle"></h3>
-
-            <dl class="detail-list">
-                <dt>일시</dt>
-                <dd id="detailDatetime"></dd>
-
-                <dt>장소</dt>
-                <dd id="detailPlace"></dd>
-
-                <dt>내용</dt>
-                <dd id="detailContent"></dd>
-
-                <dt id="detailLinkLabel" hidden>포스터</dt>
-                <dd id="detailLinkWrap" hidden>
-                    <a id="detailLink" class="detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
-                </dd>
-            </dl>
-
-            <div class="detail-actions" id="detailActions">
-                <button id="detailFavorite" class="favorite-button"></button>
-                <button id="detailEdit" class="edit-button">수정</button>
-                <button id="detailDelete" class="delete-button">삭제</button>
-            </div>
 
         </div>
     </div>
