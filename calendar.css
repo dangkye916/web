@@ -148,17 +148,31 @@ button:active {
     color: var(--saturday);
 }
 
+/* 날짜 숫자 (오늘 날짜는 파란 원 안에 표시) */
 .date-number {
+    --size: 24px;               /* 원의 지름 (모바일에서는 아래에서 줄여요) */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 24px;
-    padding: 0 4px;
+    width: var(--size);         /* 가로·세로를 같게 고정해서 두 자리 숫자여도 찌그러지지 않는 완전한 원 */
+    height: var(--size);
+    padding: 0;
     margin-bottom: 4px;
-    border-radius: 12px;
+    border-radius: 50%;
     font-size: 13px;
     font-weight: 700;
+    line-height: 1;
+}
+
+/* 글자 위·아래의 폰트 여백을 잘라내고(숫자 높이만 남김) 원 한가운데 놓아요.
+   폰트마다 숫자가 위·아래로 쏠리는 문제가 없어져요. (지원하지 않는 브라우저는 위의 기본 가운데 정렬 사용) */
+@supports (text-box: trim-both cap alphabetic) {
+    .date-number {
+        display: inline-block;
+        text-align: center;
+        text-box: trim-both cap alphabetic;
+        padding-block: calc((var(--size) - 1cap) / 2);
+    }
 }
 
 /* 오늘 */
@@ -632,9 +646,8 @@ button:active {
     }
 
     .date-number {
+        --size: 20px;
         font-size: 11px;
-        min-width: 20px;
-        height: 20px;
     }
 
     .schedule {
