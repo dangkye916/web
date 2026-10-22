@@ -33,6 +33,11 @@ const detailLinkLabel = document.getElementById("detailLinkLabel");
 const detailLinkWrap = document.getElementById("detailLinkWrap");
 const detailLink = document.getElementById("detailLink");
 
+// 일정 추가/수정 창 (관리자 페이지에만 있어요)
+const editorPopup = document.getElementById("editorPopup");
+const closeEditorButton = document.getElementById("closeEditor");
+const addScheduleButton = document.getElementById("addScheduleButton");
+
 // 현재 로그인한 사용자 (없으면 null)
 const currentUser = Auth.getUser();
 
@@ -40,7 +45,8 @@ const currentUser = Auth.getUser();
 const adminMode = window.ADMIN_PAGE === true && Auth.can("calendar.edit");
 
 // 로그인한 사람(학생·관리자)은 누구나 자기만의 즐겨찾기를 할 수 있음
-const canFavorite = Boolean(currentUser);
+// 단, 관리자 페이지(일정 관리)에는 즐겨찾기가 없어요.
+const canFavorite = Boolean(currentUser) && !adminMode;
 
 let currentDate = new Date();
 let selectedDateKey = "";   // 날짜 팝업에서 선택된 날짜
@@ -165,11 +171,11 @@ function saveFavorites() {
 }
 
 function isFavorite(id) {
-    return favoriteIds.has(id);
+    return canFavorite && favoriteIds.has(id);
 }
 
 // 예전에 관리자가 일정에 직접 눌러 둔 즐겨찾기를, 처음 접속한 관리자의 즐겨찾기로 옮겨 줌
-if (adminMode && !hasSavedFavorites) {
+if (currentUser && currentUser.isAdmin && !hasSavedFavorites) {
 
     for (const dateKey in schedules) {
         schedules[dateKey].forEach(item => {
@@ -218,6 +224,11 @@ function formatDatetime(value) {
 
     return `${year}년 ${Number(month)}월 ${Number(day)}일` +
         (timePart ? ` ${timePart}` : "");
+}
+
+// "2026-10-22T09:00" → "09:00" (시간이 없으면 빈 문자열)
+function timeOf(value) {
+    return value && value.includes("T") ? value.split("T")[1] : "";
 }
 
 // datetime-local 입력에 넣을 수 있는 형식으로 변환
@@ -321,10 +332,13 @@ function createCalendar() {
             scheduleElement.title = schedule.title;
 
             // 제목을 누르면 상세 내용 표시 (날짜 팝업은 열지 않음)
-            scheduleElement.addEventListener("click", event => {
-                event.stopPropagation();
-                openDetail(dateKey, schedule.id);
-            });
+            // 관리자 페이지에서는 제목도 날짜 칸의 일부로 눌려서, 칸 어디를 눌러도 그 날의 일정 관리 창이 열려요.
+            if (!adminMode) {
+                scheduleElement.addEventListener("click", event => {
+                    event.stopPropagation();
+                    openDetail(dateKey, schedule.id);
+                });
+            }
 
             day.appendChild(scheduleElement);
         });
@@ -347,13 +361,19 @@ function openDayPopup(dateKey) {
 
     const [year, month, day] = dateKey.split("-");
     popupDate.textContent =
-        `${year}년 ${Number(month)}월 ${Number(day)}일`;
+        `${year}년 ${Number(month)}월 ${Number(day)}일` +
+        (adminMode ? " 일정 관리" : "");
 
     resetForm();
     renderScheduleList();
 
     // 학생에게는 일정 추가/수정 폼을 숨김
     scheduleForm.hidden = !adminMode;
+
+    // 관리자 페이지: 목록 아래의 "일정 추가" 버튼
+    if (addScheduleButton) {
+        addScheduleButton.hidden = !adminMode;
+    }
 
     popup.style.display = "flex";
 }
@@ -381,16 +401,41 @@ function renderScheduleList() {
         const item = document.createElement("div");
         item.classList.add("schedule-item");
 
-        // 제목 (누르면 상세 내용)
-        const text = document.createElement("button");
-        text.type = "button";
-        text.classList.add("schedule-item-text");
-        text.textContent = schedule.title;
-        text.title = "상세 보기";
+        let text;
 
-        text.addEventListener("click", () => {
-            openDetail(selectedDateKey, schedule.id);
-        });
+        if (adminMode) {
+
+            // 관리자: 제목과 시간만 보여 주고, 수정/삭제 버튼으로만 조작해요
+            text = document.createElement("div");
+            text.classList.add("schedule-item-text", "static");
+
+            const titleElement = document.createElement("span");
+            titleElement.classList.add("item-title");
+            titleElement.textContent = schedule.title;
+            text.appendChild(titleElement);
+
+            const time = timeOf(schedule.datetime);
+
+            if (time) {
+                const timeElement = document.createElement("span");
+                timeElement.classList.add("item-time");
+                timeElement.textContent = time;
+                text.appendChild(timeElement);
+            }
+
+        } else {
+
+            // 학생: 제목 (누르면 상세 내용)
+            text = document.createElement("button");
+            text.type = "button";
+            text.classList.add("schedule-item-text");
+            text.textContent = schedule.title;
+            text.title = "상세 보기";
+
+            text.addEventListener("click", () => {
+                openDetail(selectedDateKey, schedule.id);
+            });
+        }
 
         const actions = document.createElement("div");
         actions.classList.add("schedule-actions");
@@ -540,7 +585,19 @@ function startEdit(dateKey, id) {
     saveSchedule.textContent = "수정 완료";
     cancelEdit.hidden = false;
 
-    titleInput.focus();
+    // 관리자 페이지: 수정 내용은 새 창으로 띄워요
+    if (editorPopup) {
+        editorPopup.style.display = "flex";
+    }
+
+    focusTitle();
+}
+
+// 휴대폰에서는 키보드가 바로 올라와 화면을 가리지 않게 자동 포커스를 하지 않아요
+function focusTitle() {
+    if (!window.matchMedia("(pointer: coarse)").matches) {
+        titleInput.focus();
+    }
 }
 
 let editingDateKey = "";
@@ -556,12 +613,43 @@ function resetForm() {
     contentInput.value = "";
     linkInput.value = "";
 
-    formTitle.textContent = "새 일정 추가";
-    saveSchedule.textContent = "일정 추가";
-    cancelEdit.hidden = true;
+    formTitle.textContent = "일정 추가";
+    saveSchedule.textContent = "추가하기";
+    // 새 창(관리자 페이지)에서는 추가할 때도 취소 버튼이 보여요
+    cancelEdit.hidden = !editorPopup;
 }
 
-cancelEdit.addEventListener("click", resetForm);
+// ---------- 일정 추가/수정 새 창 (관리자 페이지) ----------
+
+function openEditorForNew() {
+
+    if (!adminMode || !editorPopup) {
+        return;
+    }
+
+    resetForm();
+    editorPopup.style.display = "flex";
+    focusTitle();
+}
+
+function closeEditor() {
+
+    if (editorPopup) {
+        editorPopup.style.display = "none";
+    }
+
+    resetForm();
+}
+
+if (addScheduleButton) {
+    addScheduleButton.addEventListener("click", openEditorForNew);
+}
+
+if (closeEditorButton) {
+    closeEditorButton.addEventListener("click", closeEditor);
+}
+
+cancelEdit.addEventListener("click", closeEditor);
 
 
 // ---------- 추가 / 수정 저장 ----------
@@ -633,6 +721,7 @@ scheduleForm.addEventListener("submit", event => {
     }
 
     saveSchedules();
+    closeEditor();
 
     // 일시를 다른 날짜로 바꿨다면 그 날짜 팝업으로 이동
     if (newDateKey !== selectedDateKey) {
@@ -713,44 +802,52 @@ function updateDetailFavorite(schedule) {
 }
 
 function closeDetailPopup() {
-    detailPopup.style.display = "none";
+
+    // 관리자 페이지에는 상세 팝업이 없어요
+    if (detailPopup) {
+        detailPopup.style.display = "none";
+    }
+
     detailRef = null;
 }
 
-detailFavorite.addEventListener("click", () => {
+if (detailPopup) {
 
-    if (!detailRef) {
-        return;
-    }
+    detailFavorite.addEventListener("click", () => {
 
-    toggleFavorite(detailRef.dateKey, detailRef.id);
-});
+        if (!detailRef) {
+            return;
+        }
 
-detailEdit.addEventListener("click", () => {
+        toggleFavorite(detailRef.dateKey, detailRef.id);
+    });
 
-    if (!detailRef) {
-        return;
-    }
+    detailEdit.addEventListener("click", () => {
 
-    startEdit(detailRef.dateKey, detailRef.id);
-});
+        if (!detailRef) {
+            return;
+        }
 
-detailDelete.addEventListener("click", () => {
+        startEdit(detailRef.dateKey, detailRef.id);
+    });
 
-    if (!detailRef) {
-        return;
-    }
+    detailDelete.addEventListener("click", () => {
 
-    deleteSchedule(detailRef.dateKey, detailRef.id);
-});
+        if (!detailRef) {
+            return;
+        }
 
-closeDetail.addEventListener("click", closeDetailPopup);
+        deleteSchedule(detailRef.dateKey, detailRef.id);
+    });
 
-detailPopup.addEventListener("click", event => {
-    if (event.target === detailPopup) {
-        closeDetailPopup();
-    }
-});
+    closeDetail.addEventListener("click", closeDetailPopup);
+
+    detailPopup.addEventListener("click", event => {
+        if (event.target === detailPopup) {
+            closeDetailPopup();
+        }
+    });
+}
 
 
 // ---------- 화면 갱신 ----------
@@ -807,7 +904,9 @@ document.addEventListener("keydown", event => {
         return;
     }
 
-    if (detailPopup.style.display === "flex") {
+    if (editorPopup && editorPopup.style.display === "flex") {
+        closeEditor();
+    } else if (detailPopup && detailPopup.style.display === "flex") {
         closeDetailPopup();
     } else if (popup.style.display === "flex") {
         popup.style.display = "none";
@@ -823,7 +922,7 @@ const modeNotice = document.getElementById("modeNotice");
 
 if (adminMode) {
     modeNotice.textContent =
-        "일정 관리 · 날짜를 눌러 일정을 추가하고 수정할 수 있어요.";
+        "날짜를 눌러 그 날의 일정을 관리할 수 있어요.";
     modeNotice.classList.add("admin");
 } else if (!currentUser) {
     modeNotice.textContent =
