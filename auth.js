@@ -43,8 +43,7 @@ const Auth = (() => {
 
     // 현재 학년별 반 수 { 1: n, 2: n, 3: n }
     function getClassCount() {
-        let saved = null;
-        try { saved = JSON.parse(localStorage.getItem(CLASS_COUNT_KEY)); } catch (e) { saved = null; }
+        const saved = getData(CLASS_COUNT_KEY, null);
         const result = {};
         for (const g of [1, 2, 3]) {
             const n = saved && Number(saved[g]);
@@ -62,7 +61,7 @@ const Auth = (() => {
             if (!Number.isInteger(n) || n < 1 || n > MAX_CLASS) return "invalid";
             next[g] = n;
         }
-        try { localStorage.setItem(CLASS_COUNT_KEY, JSON.stringify(next)); } catch (e) { return "error"; }
+        if (!setData(CLASS_COUNT_KEY, next)) return "error";
         return "ok";
     }
 
@@ -90,11 +89,10 @@ const Auth = (() => {
 
     // ================= 하위 관리자 저장소 =================
     // 형태: { "학번": { name, officer, clubLeader, club, password } }
-    // ※ 지금은 이 브라우저에만 저장돼요. 서버를 연결하면 아래 load/save만 바꾸면 돼요.
+    // ※ 저장/불러오기는 storage.js를 거쳐요. 서버를 연결할 때도 storage.js만 바꾸면 돼요.
 
     function loadSubAdmins() {
-        let raw = null;
-        try { raw = JSON.parse(localStorage.getItem(SUB_ADMIN_KEY)); } catch (e) { raw = null; }
+        const raw = getData(SUB_ADMIN_KEY, null);
         const result = {};
         if (!raw || typeof raw !== "object") return result;
         for (const id of Object.keys(raw)) {
@@ -112,17 +110,14 @@ const Auth = (() => {
     }
 
     function saveSubAdmins(map) {
-        try { localStorage.setItem(SUB_ADMIN_KEY, JSON.stringify(map)); return true; }
-        catch (e) { return false; }
+        return setData(SUB_ADMIN_KEY, map);
     }
 
     // 최고 관리자 비밀번호: 바꾼 값이 있으면 그 값, 없으면 코드에 적힌 값
     // ※ 서버가 없는 지금은 바꾼 값이 이 브라우저에만 저장돼요. 코드의 비밀번호는 그대로라서 다른 기기에선 옛 비밀번호가 통해요.
     function superPassword(id) {
-        try {
-            const saved = JSON.parse(localStorage.getItem(SUPER_PW_KEY));
-            if (saved && typeof saved[id] === "string" && saved[id] !== "") return saved[id];
-        } catch (e) { /* 무시 */ }
+        const saved = getData(SUPER_PW_KEY, null);
+        if (saved && typeof saved[id] === "string" && saved[id] !== "") return saved[id];
         return ADMINS[id].password;
     }
 
@@ -245,10 +240,9 @@ const Auth = (() => {
 
         try {
             if (record.type === "super") {
-                let saved = {};
-                try { saved = JSON.parse(localStorage.getItem(SUPER_PW_KEY)) || {}; } catch (e) { saved = {}; }
+                const saved = getData(SUPER_PW_KEY, {}) || {};
                 saved[user.id] = next;
-                localStorage.setItem(SUPER_PW_KEY, JSON.stringify(saved));
+                if (!setData(SUPER_PW_KEY, saved)) return "error";
             } else {
                 const map = loadSubAdmins();
                 if (!own(map, user.id)) return "not_admin";
@@ -266,10 +260,8 @@ const Auth = (() => {
         const studentId = normalize(id);
         if (!isValidId(studentId)) return "invalid";
         if (isAdminId(studentId)) return "need_password"; // 아직 저장 안 함
-        try {
-            localStorage.setItem(ID_KEY, studentId);
-            localStorage.removeItem(ADMIN_KEY);
-        } catch (e) { return "error"; }
+        if (!setLocal(ID_KEY, studentId)) return "error";
+        removeLocal(ADMIN_KEY);
         return "ok";
     }
 
@@ -278,29 +270,21 @@ const Auth = (() => {
         const studentId = normalize(id);
         const admin = adminRecord(studentId);
         if (!admin || admin.password !== String(password ?? "")) return "wrong";
-        try {
-            localStorage.setItem(ID_KEY, studentId);
-            localStorage.setItem(ADMIN_KEY, studentId);
-        } catch (e) { return "error"; }
+        if (!setLocal(ID_KEY, studentId) || !setLocal(ADMIN_KEY, studentId)) return "error";
         return "ok";
     }
 
     function logout() {
-        try {
-            localStorage.removeItem(ID_KEY);
-            localStorage.removeItem(ADMIN_KEY);
-        } catch (e) { /* 무시 */ }
+        removeLocal(ID_KEY);
+        removeLocal(ADMIN_KEY);
     }
 
     // 현재 사용자 { id, isAdmin, role, roles } 또는 null
     //  role : "super" | "sub" | "student"
     //  roles: 가진 역할 목록 (예: ["officer", "clubLeader"])
     function getUser() {
-        let id = null, verified = null;
-        try {
-            id = localStorage.getItem(ID_KEY);
-            verified = localStorage.getItem(ADMIN_KEY);
-        } catch (e) { return null; }
+        const id = getLocal(ID_KEY);
+        const verified = getLocal(ADMIN_KEY);
 
         if (!id || !isValidId(id)) return null;
 
