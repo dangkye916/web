@@ -56,11 +56,9 @@ let detailRef = null;       // 상세 팝업에 열려 있는 일정 { dateKey, 
 
 // ---------- 데이터 ----------
 
-let schedules =
-    JSON.parse(localStorage.getItem("schedules")) || {};
+let schedules = getData("schedules", {});
 
-let oldFavorites =
-    JSON.parse(localStorage.getItem("favorites")) || [];
+let oldFavorites = getData("favorites", []);
 
 let scheduleIdCounter = 1;
 
@@ -125,7 +123,7 @@ for (const dateKey in schedules) {
 }
 
 function saveSchedules() {
-    localStorage.setItem("schedules", JSON.stringify(schedules));
+    setData("schedules", schedules);
 }
 
 saveSchedules();
@@ -142,15 +140,12 @@ let hasSavedFavorites = false;
 
 if (favoriteStorageKey) {
 
-    try {
-        const saved = JSON.parse(localStorage.getItem(favoriteStorageKey));
+    // 저장된 값이 없거나 깨졌으면 빈 목록으로 시작
+    const saved = getData(favoriteStorageKey, null);
 
-        if (Array.isArray(saved)) {
-            favoriteIds = new Set(saved);
-            hasSavedFavorites = true;
-        }
-    } catch (error) {
-        // 저장된 값이 깨졌으면 빈 목록으로 시작
+    if (Array.isArray(saved)) {
+        favoriteIds = new Set(saved);
+        hasSavedFavorites = true;
     }
 }
 
@@ -160,14 +155,8 @@ function saveFavorites() {
         return;
     }
 
-    try {
-        localStorage.setItem(
-            favoriteStorageKey,
-            JSON.stringify([...favoriteIds])
-        );
-    } catch (error) {
-        // 저장 실패 시 무시
-    }
+    // 저장 실패 시 무시
+    setData(favoriteStorageKey, [...favoriteIds]);
 }
 
 function isFavorite(id) {
