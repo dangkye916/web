@@ -77,6 +77,13 @@ function isTarget(s, userId) {
 
 function fmt(v) { return v.replace("T", " "); }
 
+// 지금 시각을 datetime-local 입력과 같은 형식("2026-10-23T13:05")으로 (초는 버림)
+function nowLocal() {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 function targetText(s) {
     return s.targets.map(t =>
         `${t.grade}학년 ` + (t.classes.length === classCount()[t.grade] ? "전체 반" : t.classes.map(c => c + "반").join(", "))
@@ -173,7 +180,7 @@ function renderCreate() {
     // 종료는 시작 이후만 선택 가능
     const endInput = h("input", { type: "datetime-local", value: d.end, min: d.start || false,
         oninput: e => { d.end = e.target.value; } });
-    const startInput = h("input", { type: "datetime-local", value: d.start, oninput: e => {
+    const startInput = h("input", { type: "datetime-local", value: d.start, min: nowLocal(), oninput: e => {
         d.start = e.target.value;
         endInput.min = d.start;
         if (d.end && d.end <= d.start) { d.end = ""; endInput.value = ""; }
@@ -244,6 +251,7 @@ function submitCreate(event) {
 
     if (!d.title.trim()) return fail("제목을 입력해 주세요.");
     if (!d.start || !d.end) return fail("시작과 종료 일시를 모두 입력해 주세요.");
+    if (d.start < nowLocal()) return fail("시작 일시는 지금보다 이후로 정해 주세요.");
     if (new Date(d.end) <= new Date(d.start)) return fail("종료 일시는 시작 일시보다 늦어야 해요.");
     if (d.targets.every(t => t.classes.length === 0)) return fail("대상 반을 한 개 이상 선택해 주세요.");
 
@@ -257,8 +265,12 @@ function submitCreate(event) {
             if (new Set(item.options).size !== item.options.length) return fail(`질문 ${i + 1}에 같은 항목이 있어요.`);
         }
         if (q.type === "multi") {
-            if (!Number.isInteger(q.count) || q.count < 2 || q.count >= item.options.length)
-                return fail(`질문 ${i + 1}: 선택 개수는 2개 이상, 항목 수(${item.options.length}개)보다 작아야 해요.`);
+            if (item.options.length < 3)
+                return fail(`질문 ${i + 1}: 복수 선택은 항목이 3개 이상 필요해요. 항목을 더 추가해 주세요.`);
+            if (!Number.isInteger(q.count) || q.count < 2)
+                return fail(`질문 ${i + 1}: 선택해야 하는 개수는 2개 이상으로 정해 주세요.`);
+            if (q.count >= item.options.length)
+                return fail(`질문 ${i + 1}: 선택해야 하는 개수(${q.count}개)는 항목 수(${item.options.length}개)보다 적어야 해요. 개수를 줄이거나 항목을 더 추가해 주세요.`);
             item.count = q.count;
         }
         questions.push(item);
