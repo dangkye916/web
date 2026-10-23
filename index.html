@@ -96,6 +96,7 @@
         © 학생회
     </footer>
 
+    <script src="storage.js"></script>
     <script src="auth.js"></script>
     <script>
         Auth.renderUserArea(document.getElementById("userArea"));
@@ -124,30 +125,14 @@
             }
 
             // 내 즐겨찾기 ID 목록 (calendar 페이지에서 저장한 값)
-            let favoriteIds = [];
-
-            try {
-                const saved = JSON.parse(
-                    localStorage.getItem(`favoriteIds_${user.id}`)
-                );
-
-                if (Array.isArray(saved)) {
-                    favoriteIds = saved;
-                }
-            } catch (error) {
-                // 값이 깨졌으면 빈 목록으로 처리
-            }
+            // (값이 없거나 깨졌으면 빈 목록으로 처리)
+            const savedFavorites = getData(`favoriteIds_${user.id}`, []);
+            const favoriteIds = Array.isArray(savedFavorites) ? savedFavorites : [];
 
             const favoriteSet = new Set(favoriteIds);
 
             // 전체 일정
-            let schedules = {};
-
-            try {
-                schedules = JSON.parse(localStorage.getItem("schedules")) || {};
-            } catch (error) {
-                schedules = {};
-            }
+            const schedules = getData("schedules", {});
 
             // 오늘 날짜 (YYYY-MM-DD)
             const now = new Date();
@@ -227,8 +212,7 @@
         // ---------- 바로가기 버튼 ----------
         document.querySelectorAll(".quick-link").forEach(button => {
             button.addEventListener("click", () => {
-                let links = {};
-                try { links = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (error) { links = {}; }
+                const links = getData("siteLinks", {});
 
                 const url = links[button.dataset.key];
 
