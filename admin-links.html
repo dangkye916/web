@@ -39,6 +39,7 @@
 
     <footer class="site-footer">© 학생회</footer>
 
+    <script src="storage.js"></script>
     <script src="auth.js"></script>
     <script src="admin.js"></script>
     <script>
@@ -68,8 +69,7 @@
                 }
             }
 
-            let savedLinks = {};
-            try { savedLinks = JSON.parse(localStorage.getItem("siteLinks")) || {}; } catch (error) { savedLinks = {}; }
+            const savedLinks = getData("siteLinks", {});
 
             schoolInput.value = savedLinks.school || "";
             instagramInput.value = savedLinks.instagram || "";
@@ -87,7 +87,10 @@
                     return;
                 }
 
-                localStorage.setItem("siteLinks", JSON.stringify({ school, instagram }));
+                if (!setData("siteLinks", { school, instagram })) {
+                    showMsg(linksMsg, "저장하지 못했어요. 저장 공간을 확인해 주세요.", false);
+                    return;
+                }
                 schoolInput.value = school;
                 instagramInput.value = instagram;
                 showMsg(linksMsg, "저장했어요. 메인 화면 버튼에 바로 반영돼요.", true);
