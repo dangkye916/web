@@ -1,18 +1,17 @@
-// ================= 데이터 (서버 연결할 때 이 부분만 바꾸면 돼요) =================
+// ================= 데이터 (저장/불러오기는 storage.js를 거쳐요) =================
 // 학년별 반 수는 관리자 페이지에서 설정한 값을 가져와요 (auth.js 참고)
 const classCount = () => Auth.getClassCount();
 const range = n => Array.from({ length: n }, (_, i) => i + 1);
 
-function load(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-    catch (e) { return fallback; }
+// 저장에 실패하면 에러를 던져서, 화면에서 알림으로 보여줘요
+function save(key, value) {
+    if (!setData(key, value)) throw new Error("저장하지 못했어요. 저장 공간을 확인해 주세요.");
 }
-function save(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
 const Store = {
-    surveys: () => load("surveys", []),
-    participants: id => load(`surveyParticipants_${id}`, []), // 참여한 학번 (중복 방지용)
-    responses: id => load(`surveyResponses_${id}`, []),       // 응답 내용 (익명이면 학번 없음)
+    surveys: () => getData("surveys", []),
+    participants: id => getData(`surveyParticipants_${id}`, []), // 참여한 학번 (중복 방지용)
+    responses: id => getData(`surveyResponses_${id}`, []),       // 응답 내용 (익명이면 학번 없음)
 
     create(survey) {
         if (!Auth.can("survey.create")) throw new Error("권한이 없어요.");
@@ -21,8 +20,8 @@ const Store = {
     remove(id) {
         if (!Auth.can("survey.delete")) throw new Error("권한이 없어요.");
         save("surveys", this.surveys().filter(s => s.id !== id));
-        localStorage.removeItem(`surveyParticipants_${id}`);
-        localStorage.removeItem(`surveyResponses_${id}`);
+        removeData(`surveyParticipants_${id}`);
+        removeData(`surveyResponses_${id}`);
     },
     results(id) {
         if (!Auth.can("survey.results")) throw new Error("권한이 없어요.");
