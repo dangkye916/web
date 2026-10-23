@@ -229,7 +229,7 @@ function renderCreate() {
         h("input", { type: "text", value: d.title, maxlength: 100, oninput: e => { d.title = e.target.value; } }),
         h("div", { class: "row two" },
             h("div", {}, h("label", {}, "시작"), startInput),
-            h("div", {}, h("label", {}, "종료 (시작 이후만 선택 가능)"), endInput)),
+            h("div", {}, h("label", {}, "종료"), endInput)),
         h("label", {}, "설문 방식"),
         h("select", { onchange: e => { d.anonymous = e.target.value === "1"; } },
             h("option", { value: "1", selected: d.anonymous }, "익명 (기본)"),
@@ -265,8 +265,6 @@ function submitCreate(event) {
             if (new Set(item.options).size !== item.options.length) return fail(`질문 ${i + 1}에 같은 항목이 있어요.`);
         }
         if (q.type === "multi") {
-            if (item.options.length < 3)
-                return fail(`질문 ${i + 1}: 복수 선택은 항목이 3개 이상 필요해요. 항목을 더 추가해 주세요.`);
             if (!Number.isInteger(q.count) || q.count < 2)
                 return fail(`질문 ${i + 1}: 선택해야 하는 개수는 2개 이상으로 정해 주세요.`);
             if (q.count >= item.options.length)
