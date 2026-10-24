@@ -8,20 +8,29 @@ function save(key, value) {
     if (!setData(key, value)) throw new Error("저장하지 못했어요. 저장 공간을 확인해 주세요.");
 }
 
+// 학생 수만큼 늘어나는 데이터는 "배열 하나"가 아니라 항목 하나씩 따로 저장해요 (storage.js의 setItem 등).
+//  - 참여 기록: 참여한 학번 1명 = 항목 1개 (항목 ID가 곧 학번이라 중복 참여가 자동으로 막혀요)
+//  - 응답 내용: 응답 1개 = 항목 1개 (항목 ID는 랜덤이라 학번·제출 시각과 연결되지 않아요)
+const participantsOf = id => `surveyParticipants_${id}`;
+const responsesOf = id => `surveyResponses_${id}`;
+
 const Store = {
     surveys: () => getData("surveys", []),
-    participants: id => getData(`surveyParticipants_${id}`, []), // 참여한 학번 (중복 방지용)
-    responses: id => getData(`surveyResponses_${id}`, []),       // 응답 내용 (익명이면 학번 없음)
+    hasParticipated: (id, userId) => hasItem(participantsOf(id), userId),
+    responses: id => listItems(responsesOf(id)).map(answers => ({ answers })), // 모든 응답을 읽어요 (결과 화면에서만 쓰기)
+    count: id => countItems(responsesOf(id)),                                  // 응답 수만 셀 때는 이걸 써요
 
     create(survey) {
         if (!Auth.can("survey.create")) throw new Error("권한이 없어요.");
+        if (!isStep(survey.start) || !isStep(survey.end)) throw new Error("시작·종료 시각은 10분 단위로만 정할 수 있어요.");
+        if (survey.end < addMinutes(survey.start, STEP)) throw new Error("종료 일시는 시작 일시보다 10분 이상 늦어야 해요.");
         save("surveys", [...this.surveys(), survey]);
     },
     remove(id) {
         if (!Auth.can("survey.delete")) throw new Error("권한이 없어요.");
         save("surveys", this.surveys().filter(s => s.id !== id));
-        removeData(`surveyParticipants_${id}`);
-        removeData(`surveyResponses_${id}`);
+        removeCollection(participantsOf(id));
+        removeCollection(responsesOf(id));
     },
     results(id) {
         if (!Auth.can("survey.results")) throw new Error("권한이 없어요.");
@@ -30,13 +39,15 @@ const Store = {
     submit(survey, userId, answers) {
         if (!isTarget(survey, userId)) throw new Error("대상이 아니에요.");
         if (statusOf(survey) !== "open") throw new Error("참여 기간이 아니에요.");
-        const people = this.participants(survey.id);
-        if (people.includes(userId)) throw new Error("이미 참여했어요.");
-        save(`surveyParticipants_${survey.id}`, [...people, userId]);
-        // 응답엔 학번·제출 시각을 넣지 않고, 저장 위치도 섞어서 참여 기록과 연결되지 않게 함
-        const list = this.responses(survey.id);
-        list.splice(Math.floor(Math.random() * (list.length + 1)), 0, { answers });
-        save(`surveyResponses_${survey.id}`, list);
+        if (this.hasParticipated(survey.id, userId)) throw new Error("이미 참여했어요.");
+        const failMsg = "저장하지 못했어요. 저장 공간을 확인해 주세요.";
+        if (!setItem(participantsOf(survey.id), userId, 1)) throw new Error(failMsg);
+        let rid;
+        do { rid = Math.random().toString(36).slice(2, 10); } while (hasItem(responsesOf(survey.id), rid));
+        if (!setItem(responsesOf(survey.id), rid, answers)) {
+            removeItem(participantsOf(survey.id), userId); // 응답 저장이 실패하면 참여 기록도 되돌려서 다시 제출할 수 있게
+            throw new Error(failMsg);
+        }
     }
 };
 
@@ -83,6 +94,67 @@ function nowLocal() {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+// ================= 10분 단위 일시 선택 =================
+const STEP = 10; // 분 단위 간격
+const pad = n => String(n).padStart(2, "0");
+
+function toLocalStr(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function addMinutes(str, n) { return toLocalStr(new Date(new Date(str).getTime() + n * 60000)); }
+function isStep(str) { return /^\d{4}-\d{2}-\d{2}T\d{2}:[0-5]0$/.test(String(str)); }
+
+// 지금 이후에 고를 수 있는 가장 이른 10분 단위 시각 (지금이 정각 10분 단위면 그 시각)
+function earliestStart() {
+    const now = nowLocal();
+    const m = Number(now.slice(14, 16));
+    return m % STEP === 0 ? now : addMinutes(now, STEP - (m % STEP));
+}
+
+// 날짜 + 시 + 분(10분 단위) 선택칸. getMin()은 고를 수 있는 가장 이른 시각이고, 그보다 이른 날짜·시·분은 막혀요.
+// onChange(값)은 사람이 바꿀 때 불리고, refresh()는 범위를 다시 계산한 뒤 현재 값("" 이면 미선택)을 돌려줘요.
+function dateTimeField(initial, getMin, onChange) {
+    const dateInput = h("input", { type: "date" });
+    const hourSel = h("select", { "aria-label": "시" }, h("option", { value: "" }, "시"),
+        range(24).map(i => h("option", { value: i - 1 }, `${pad(i - 1)}시`)));
+    const minSel = h("select", { "aria-label": "분" }, h("option", { value: "" }, "분"),
+        range(60 / STEP).map(i => h("option", { value: (i - 1) * STEP }, `${pad((i - 1) * STEP)}분`)));
+
+    if (initial) {
+        dateInput.value = initial.slice(0, 10);
+        hourSel.value = String(Number(initial.slice(11, 13)));
+        minSel.value = String(Number(initial.slice(14, 16)));
+    }
+
+    const value = () => dateInput.value && hourSel.value !== "" && minSel.value !== ""
+        ? `${dateInput.value}T${pad(hourSel.value)}:${pad(minSel.value)}` : "";
+
+    function refresh() {
+        const min = getMin();
+        const [minDate, minTime] = min.split("T");
+        dateInput.min = minDate;
+        if (dateInput.value && dateInput.value < minDate) dateInput.value = minDate; // 직접 입력한 이른 날짜는 가장 이른 날짜로
+        const sameDay = dateInput.value === minDate;
+        const minHour = sameDay ? Number(minTime.slice(0, 2)) : 0;
+        const minMinute = Number(minTime.slice(3, 5));
+
+        [...hourSel.options].forEach(o => { o.disabled = o.value !== "" && Number(o.value) < minHour; });
+        if (hourSel.value !== "" && Number(hourSel.value) < minHour) { hourSel.value = ""; minSel.value = ""; }
+
+        const sameHour = sameDay && hourSel.value !== "" && Number(hourSel.value) === minHour;
+        [...minSel.options].forEach(o => { o.disabled = o.value !== "" && sameHour && Number(o.value) < minMinute; });
+        if (minSel.value !== "" && sameHour && Number(minSel.value) < minMinute) minSel.value = "";
+        return value();
+    }
+
+    const changed = () => { refresh(); onChange(value()); };
+    dateInput.addEventListener("change", changed);
+    hourSel.addEventListener("change", changed);
+    minSel.addEventListener("change", changed);
+    refresh();
+    return { el: h("div", { class: "dt-field" }, dateInput, hourSel, minSel), refresh };
+}
+
 function targetText(s) {
     return s.targets.map(t =>
         `${t.grade}학년 ` + (t.classes.length === classCount()[t.grade] ? "전체 반" : t.classes.map(c => c + "반").join(", "))
@@ -127,12 +199,12 @@ function renderList() {
     if (items.length === 0) list.append(h("p", { class: "favorite-empty" }, "해당하는 설문이 없어요."));
 
     items.forEach(s => {
-        const done = !MANAGE && Store.participants(s.id).includes(user.id);
+        const done = !MANAGE && Store.hasParticipated(s.id, user.id);
         const actions = h("div", { class: "card-actions" });
 
         if (MANAGE) {
             actions.append(
-                h("span", { class: "count" }, `응답 ${Store.responses(s.id).length}명`),
+                h("span", { class: "count" }, `응답 ${Store.count(s.id)}명`),
                 h("button", { class: "secondary-button", type: "button", onclick: () => renderResults(s) }, "결과 보기"),
                 h("button", { class: "danger-button", type: "button", onclick: () => removeSurvey(s) }, "삭제"));
         } else if (done) {
@@ -155,7 +227,7 @@ function renderList() {
 }
 
 function removeSurvey(s) {
-    const n = Store.responses(s.id).length;
+    const n = Store.count(s.id);
     const warn = n > 0 ? `\n이미 ${n}명이 응답했고, 삭제하면 응답도 모두 사라져요.` : "";
     if (!confirm(`「${s.title}」 설문을 삭제할까요?${warn}`)) return;
     Store.remove(s.id);
@@ -176,14 +248,16 @@ function startCreate() {
 function renderCreate() {
     const d = draft;
 
-    // 종료는 시작 이후만 선택 가능
-    const endInput = h("input", { type: "datetime-local", value: d.end, min: d.start || false,
-        oninput: e => { d.end = e.target.value; } });
-    const startInput = h("input", { type: "datetime-local", value: d.start, min: nowLocal(), oninput: e => {
-        d.start = e.target.value;
-        endInput.min = d.start;
-        if (d.end && d.end <= d.start) { d.end = ""; endInput.value = ""; }
-    } });
+    // 시각은 10분 단위로만 고를 수 있어요. 시작은 지금 이후, 종료는 시작보다 10분 뒤부터 (그 전 시각은 선택할 수 없어요)
+    let endField;
+    const startField = dateTimeField(d.start, earliestStart, v => {
+        d.start = v;
+        d.end = endField.refresh(); // 시작이 바뀌면 종료 선택 범위도 바뀌고, 범위를 벗어난 종료 시각은 비워져요
+    });
+    endField = dateTimeField(d.end,
+        () => addMinutes(d.start || earliestStart(), STEP),
+        v => { d.end = v; });
+    d.end = endField.refresh();
 
     // 1·2·3학년이 항상 보이고, 처음엔 모든 반이 선택된 상태
     const targets = h("div", {}, d.targets.map(t => {
@@ -227,8 +301,8 @@ function renderCreate() {
         h("label", {}, "제목"),
         h("input", { type: "text", value: d.title, maxlength: 100, oninput: e => { d.title = e.target.value; } }),
         h("div", { class: "row two" },
-            h("div", {}, h("label", {}, "시작"), startInput),
-            h("div", {}, h("label", {}, "종료"), endInput)),
+            h("div", {}, h("label", {}, "시작 (10분 단위)"), startField.el),
+            h("div", {}, h("label", {}, "종료 (시작보다 10분 이후)"), endField.el)),
         h("label", {}, "설문 방식"),
         h("select", { onchange: e => { d.anonymous = e.target.value === "1"; } },
             h("option", { value: "1", selected: d.anonymous }, "익명 (기본)"),
@@ -251,7 +325,8 @@ function submitCreate(event) {
     if (!d.title.trim()) return fail("제목을 입력해 주세요.");
     if (!d.start || !d.end) return fail("시작과 종료 일시를 모두 입력해 주세요.");
     if (d.start < nowLocal()) return fail("시작 일시는 지금보다 이후로 정해 주세요.");
-    if (new Date(d.end) <= new Date(d.start)) return fail("종료 일시는 시작 일시보다 늦어야 해요.");
+    if (!isStep(d.start) || !isStep(d.end)) return fail("시작·종료 시각은 10분 단위로만 정할 수 있어요.");
+    if (d.end < addMinutes(d.start, STEP)) return fail("종료 일시는 시작 일시보다 10분 이상 늦어야 해요.");
     if (d.targets.every(t => t.classes.length === 0)) return fail("대상 반을 한 개 이상 선택해 주세요.");
 
     const questions = [];
