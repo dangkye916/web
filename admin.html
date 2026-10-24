@@ -137,9 +137,9 @@
     <footer class="site-footer">© 학생회</footer>
 
     <script src="storage.js"></script>
-    <script src="auth.js"></script>
-    <script src="admin.js"></script>
-    <script>
+    <script type="after-ready" src="auth.js"></script>
+    <script type="after-ready" src="admin.js"></script>
+    <script type="after-ready">
         // 관리자(최고 관리자·하위 관리자)가 아니면 메인으로 돌려보냄
         if (AdminPage.guard(null)) {
 
