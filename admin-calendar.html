@@ -85,14 +85,14 @@
     </div>
 
     <script src="storage.js"></script>
-    <script src="auth.js"></script>
-    <script>
+    <script type="after-ready" src="auth.js"></script>
+    <script type="after-ready">
         // 이 페이지는 일정 관리용 (권한 없으면 메인으로)
         window.ADMIN_PAGE = true;
         if (!Auth.can("calendar.edit")) location.replace("index.html");
     </script>
-    <script src="calendar.js"></script>
-    <script>
+    <script type="after-ready" src="calendar.js"></script>
+    <script type="after-ready">
         document.querySelector(".calendar").classList.add("admin-view");
     </script>
 </body>
