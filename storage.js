@@ -150,3 +150,49 @@ function removeLocal(key) {
         return false;
     }
 }
+
+
+// ---------- 페이지 시작: 데이터가 준비될 때까지 기다리는 자리 ----------
+// 각 페이지의 스크립트는 HTML에서 <script type="after-ready" ...> 로 적어 두어요.
+// 이렇게 적은 스크립트는 바로 실행되지 않고, 아래 storageReady()가 끝난 뒤에 적힌 순서대로 실행돼요.
+//
+// 지금은 데이터가 이미 이 브라우저 안에 있어서 storageReady()가 곧바로 끝나요. (동작은 예전과 똑같아요)
+// 나중에 Firebase를 붙일 때는 storageReady() 안에서 "서버에서 필요한 데이터를 받아 와서
+// 메모리에 담아 두는 일"이 끝날 때까지 기다리게만 바꾸면 돼요. 그러면 getData()는 지금처럼 값을 바로 돌려줄 수 있어요.
+// 서버에서 데이터를 못 받아 오면 에러를 던지세요. 데이터가 빈 채로 페이지가 시작해서
+// 서버의 진짜 데이터를 빈 값으로 덮어쓰는 일을 막기 위해, 이때는 페이지 스크립트를 실행하지 않아요.
+function storageReady() {
+    return Promise.resolve();
+}
+
+async function runPageScripts() {
+    try {
+        await storageReady();
+    } catch (e) {
+        console.error(e);
+        alert("데이터를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.");
+        return;
+    }
+    const scripts = [...document.querySelectorAll('script[type="after-ready"]')];
+    for (const old of scripts) {
+        const el = document.createElement("script");
+        if (old.src) {
+            await new Promise(resolve => {
+                el.onload = resolve;
+                el.onerror = () => { console.error(old.getAttribute("src") + " 를 불러오지 못했어요."); resolve(); };
+                el.src = old.getAttribute("src");
+                document.body.appendChild(el);
+            });
+        } else {
+            el.textContent = old.textContent; // 안에 적힌 코드를 이때 실행해요
+            document.body.appendChild(el);
+        }
+    }
+    document.documentElement.dataset.pageReady = "1"; // 모든 스크립트 실행이 끝났다는 표시
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runPageScripts);
+} else {
+    runPageScripts();
+}
