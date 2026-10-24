@@ -126,7 +126,9 @@ function saveSchedules() {
     setData("schedules", schedules);
 }
 
-saveSchedules();
+// ※ 예전에는 여기서 saveSchedules()를 한 번 불러서, 학생이 캘린더를 열 때마다 일정 전체를 다시 저장했어요.
+//   (서버에서는 방문 1번 = 쓰기 1번이라 무료 한도를 낭비하고, 관리자가 방금 올린 일정을 덮어쓸 수도 있어서 뺐어요.)
+//   일정은 관리자가 추가·수정·삭제할 때만 저장돼요.
 
 
 // ---------- 즐겨찾기 (사용자별로 저장) ----------
@@ -162,21 +164,6 @@ function saveFavorites() {
 function isFavorite(id) {
     return canFavorite && favoriteIds.has(id);
 }
-
-// 예전에 관리자가 일정에 직접 눌러 둔 즐겨찾기를, 처음 접속한 관리자의 즐겨찾기로 옮겨 줌
-if (currentUser && currentUser.isAdmin && !hasSavedFavorites) {
-
-    for (const dateKey in schedules) {
-        schedules[dateKey].forEach(item => {
-            if (item.favorite) {
-                favoriteIds.add(item.id);
-            }
-        });
-    }
-
-    saveFavorites();
-}
-
 
 // 날짜별 일정 목록 (일시 순서로 정렬)
 function getSchedules(dateKey) {
