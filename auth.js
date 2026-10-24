@@ -36,8 +36,28 @@ const Auth = (() => {
     const ID_KEY = "currentStudentId";
     const ADMIN_KEY = "adminVerifiedId"; // 비밀번호까지 통과한 관리자 학번
 
+    // 최고 관리자 권한 이전 / 학년 초기화에 쓰는 값
+    const SUPER_ID_KEY = "superAdminId";          // 권한을 이전받은 최고 관리자 학번 (없으면 위 ADMINS의 학번)
+    const EPOCH_KEY = "dataEpoch";                // 학년 초기화를 한 시각 (서버에 저장)
+    const EPOCH_LOCAL_KEY = "loginEpoch";         // 이 브라우저가 로그인했을 때의 초기화 시각
+    // 학번에 딸린 데이터 (이름이 이 글자로 시작하는 저장 데이터를 학년 초기화 때 지워요)
+    //  - favoriteIds_학번           : 학생별 즐겨찾기 (calendar.js)
+    //  - surveyParticipants_설문ID  : 어느 학번이 설문에 참여했는지 기록 (survey.js)
+    // ※ 설문 응답 내용(surveyResponses_설문ID)은 관리자가 계속 볼 수 있게 지우지 않아요. (기명 설문의 이름·학번도 그대로 남아요)
+    // ※ 일정(schedules), 설문(surveys), 바로가기 링크, 반 수 설정도 관리자가 등록한 것이라 지우지 않아요.
+    const STUDENT_DATA_PREFIXES = ["favoriteIds_", "surveyParticipants_"];
+
     const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
     function normalize(id) { return String(id ?? "").trim(); }
+
+    // 지금 최고 관리자인 학번 (권한을 이전했으면 이전받은 학번, 아니면 코드의 ADMINS 학번)
+    function getSuperId() {
+        const saved = getData(SUPER_ID_KEY, null);
+        if (typeof saved === "string" && STUDENT_ID_PATTERN.test(saved)) return saved;
+        return Object.keys(ADMINS)[0];
+    }
+    function isSuperId(id) { return normalize(id) === getSuperId(); }
+    function currentEpoch() { return String(getData(EPOCH_KEY, 0)); }
 
     // ================= 학년별 반 수 =================
 
@@ -118,13 +138,13 @@ const Auth = (() => {
     function superPassword(id) {
         const saved = getData(SUPER_PW_KEY, null);
         if (saved && typeof saved[id] === "string" && saved[id] !== "") return saved[id];
-        return ADMINS[id].password;
+        return own(ADMINS, id) ? ADMINS[id].password : null; // 비밀번호가 없으면 로그인 불가(null)
     }
 
     // 관리자 정보 찾기 (최고 관리자 또는 하위 관리자), 없으면 null
     function adminRecord(id) {
         const s = normalize(id);
-        if (own(ADMINS, s)) return { type: "super", password: superPassword(s), roles: [ADMINS[s].role], name: "" };
+        if (isSuperId(s)) return { type: "super", password: superPassword(s), roles: ["super"], name: "" };
         const sub = loadSubAdmins()[s];
         if (!sub) return null;
         const roles = [];
@@ -178,7 +198,7 @@ const Auth = (() => {
     function addSubAdmin(id, data) {
         if (!can("admin.manage")) return "forbidden";
         const studentId = normalize(id);
-        if (own(ADMINS, studentId)) return "super_id";
+        if (isSuperId(studentId)) return "super_id";
         if (!isValidId(studentId)) return "invalid_id";
         const map = loadSubAdmins();
         if (own(map, studentId)) return "duplicate";
@@ -253,6 +273,56 @@ const Auth = (() => {
         return "ok";
     }
 
+    // ================= 학년 초기화 / 최고 관리자 권한 이전 (최고 관리자 전용) =================
+
+    // 새 학년 시작 전에 학번에 딸린 데이터를 지워요.
+    //  지우는 것: 모든 학번의 즐겨찾기, 학번별 설문 참여 기록, 하위 관리자 전체
+    //  남기는 것: 최고 관리자 학번과 그 권한, 설문 응답 결과, 관리자가 등록한 일정·설문·링크·반 수 설정
+    //  (최고 관리자의 즐겨찾기도 위에서 같이 지워져요)
+    // 결과: "ok" | "forbidden" | "error"
+    function resetYearData() {
+        if (!can("admin.manage")) return "forbidden";
+        let failed = false;
+        for (const prefix of STUDENT_DATA_PREFIXES) {
+            if (removeByPrefix(prefix) < 0) failed = true;
+        }
+        if (!removeData(SUB_ADMIN_KEY)) failed = true;
+        // 모든 학생의 예전 로그인을 무효로 만들어요 (새 학년엔 학번이 바뀌니까요). 지금 이 최고 관리자는 그대로 유지.
+        const epoch = Date.now();
+        if (!setData(EPOCH_KEY, epoch) || !setLocal(EPOCH_LOCAL_KEY, epoch)) failed = true;
+        return failed ? "error" : "ok";
+    }
+
+    // 최고 관리자 권한을 다른 학번에게 넘겨요. 현재 최고 관리자 비밀번호를 입력해야 해요.
+    // 새 최고 관리자는 지금의 최고 관리자 비밀번호를 그대로 이어받아요. (이전 후 "내 비밀번호 변경"에서 바꿀 수 있어요)
+    // 이전한 본인은 일반 학생이 되고, 이전받은 학번이 하위 관리자였다면 그 지정은 사라져요.
+    // 결과: "ok" | "forbidden" | "wrong" | "invalid_id" | "same_id" | "error"
+    function transferSuper(newId, currentPassword) {
+        if (!can("admin.manage")) return "forbidden";
+        const user = getUser();
+        const oldId = user.id;
+        const password = superPassword(oldId);
+        if (!password || password !== String(currentPassword ?? "")) return "wrong";
+
+        const target = normalize(newId);
+        if (!isValidId(target)) return "invalid_id";
+        if (target === oldId) return "same_id";
+
+        const saved = getData(SUPER_PW_KEY, {}) || {};
+        delete saved[oldId];
+        saved[target] = password;
+        if (!setData(SUPER_PW_KEY, saved)) return "error";
+        if (!setData(SUPER_ID_KEY, target)) return "error";
+
+        const subs = loadSubAdmins();
+        if (own(subs, target)) {
+            delete subs[target];
+            if (!saveSubAdmins(subs)) return "error";
+        }
+        logout(); // 이전한 본인은 더 이상 관리자가 아니므로 로그아웃
+        return "ok";
+    }
+
     // ================= 로그인 =================
 
     // 1단계: 학번 입력 → "invalid" | "need_password" | "ok" | "error"
@@ -260,7 +330,7 @@ const Auth = (() => {
         const studentId = normalize(id);
         if (!isValidId(studentId)) return "invalid";
         if (isAdminId(studentId)) return "need_password"; // 아직 저장 안 함
-        if (!setLocal(ID_KEY, studentId)) return "error";
+        if (!setLocal(ID_KEY, studentId) || !setLocal(EPOCH_LOCAL_KEY, currentEpoch())) return "error";
         removeLocal(ADMIN_KEY);
         return "ok";
     }
@@ -270,13 +340,15 @@ const Auth = (() => {
         const studentId = normalize(id);
         const admin = adminRecord(studentId);
         if (!admin || admin.password !== String(password ?? "")) return "wrong";
-        if (!setLocal(ID_KEY, studentId) || !setLocal(ADMIN_KEY, studentId)) return "error";
+        if (!setLocal(ID_KEY, studentId) || !setLocal(ADMIN_KEY, studentId)
+            || !setLocal(EPOCH_LOCAL_KEY, currentEpoch())) return "error";
         return "ok";
     }
 
     function logout() {
         removeLocal(ID_KEY);
         removeLocal(ADMIN_KEY);
+        removeLocal(EPOCH_LOCAL_KEY);
     }
 
     // 현재 사용자 { id, isAdmin, role, roles } 또는 null
@@ -287,6 +359,7 @@ const Auth = (() => {
         const verified = getLocal(ADMIN_KEY);
 
         if (!id || !isValidId(id)) return null;
+        if ((getLocal(EPOCH_LOCAL_KEY) ?? "0") !== currentEpoch()) return null; // 학년 초기화 전에 로그인한 상태
 
         const record = adminRecord(id);
         const isAdmin = Boolean(record) && verified === id;
@@ -364,7 +437,8 @@ const Auth = (() => {
         getClassCount, setClassCount, MAX_CLASS, MAX_NUMBER,
         listSubAdmins, addSubAdmin, updateSubAdmin, removeSubAdmin, resetSubAdminPassword,
         roleLabel, DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB, MIN_PASSWORD, MAX_PASSWORD, changePassword,
-        login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea
+        login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea,
+        resetYearData, transferSuper, getSuperId
     };
 
 })();
