@@ -17,7 +17,7 @@ main { padding-bottom: 20px; }
 .panel label.inline { display: flex; align-items: center; gap: 8px; }
 .panel label.option, .panel label.chip { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-weight: 500; font-size: 15px; color: var(--text); }
 
-.panel input[type=text], .panel input[type=datetime-local], .panel input[type=number], .panel select {
+.panel input[type=text], .panel input[type=datetime-local], .panel input[type=date], .panel input[type=number], .panel select {
     width: 100%;
     margin-top: 6px;
     padding: 10px 12px;
@@ -26,7 +26,7 @@ main { padding-bottom: 20px; }
     background: #fafcff;
     font: inherit;
 }
-.panel input[type=text]:focus, .panel input[type=datetime-local]:focus, .panel input[type=number]:focus, .panel select:focus {
+.panel input[type=text]:focus, .panel input[type=date]:focus, .panel input[type=datetime-local]:focus, .panel input[type=number]:focus, .panel select:focus {
     outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.18);
 }
 .panel input[readonly] { background: #eef1f6; color: var(--muted); }
@@ -126,3 +126,8 @@ main { padding-bottom: 20px; }
     font: inherit;
 }
 .panel input[type=password]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.18); }
+
+/* 설문 시작·종료: 날짜 + 시 + 분(10분 단위) 선택 */
+.dt-field { display: flex; gap: 6px; }
+.dt-field input[type=date] { flex: 2 1 130px; min-width: 0; }
+.dt-field select { flex: 1 1 64px; min-width: 0; }
