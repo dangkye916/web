@@ -102,6 +102,36 @@
 
             </div>
         </section>
+
+        <!-- 최고 관리자 전용 (data-perm="admin.manage"라서 다른 관리자에게는 보이지 않아요) -->
+        <section class="super-zone" data-perm="admin.manage" style="margin-top:22px">
+            <h2 class="admin-group-title">최고 관리자 전용</h2>
+
+            <form id="transferForm" class="panel" autocomplete="off" style="max-width:520px">
+                <h2 style="margin:0 0 6px;font-size:18px">최고 관리자 권한 이전</h2>
+                <p class="meta">최고 관리자 권한을 다른 학번에게 넘겨요. 넘기고 나면 나는 일반 학생이 되고, 이전받은 학번은 지금 최고 관리자 비밀번호를 그대로 이어받아요. (이전받은 사람이 로그인한 뒤 &lsquo;내 비밀번호 변경&rsquo;에서 바꿀 수 있어요)</p>
+
+                <label for="transferId">권한을 넘겨받을 학번</label>
+                <input type="text" id="transferId" inputmode="numeric" maxlength="5" placeholder="예: 10101">
+
+                <label for="transferPassword">현재 최고 관리자 비밀번호</label>
+                <input type="password" id="transferPassword" autocomplete="current-password">
+
+                <button type="submit" class="danger-button" style="margin-top:12px">권한 이전하기</button>
+                <p id="transferMsg" class="login-error" hidden></p>
+            </form>
+
+            <div class="panel" style="max-width:520px;margin-top:16px">
+                <h2 style="margin:0 0 6px;font-size:18px">새 학년 초기화</h2>
+                <p class="meta">
+                    새 학년이 시작되기 전에 누르세요. 학번에 딸린 데이터를 지워요.<br>
+                    <b>지워지는 것</b>: 모든 학번의 즐겨찾기, 학번별 설문 참여 기록, 하위 관리자 전체 (최고 관리자의 즐겨찾기도 포함), 지금 로그인되어 있는 학생들의 로그인 상태<br>
+                    <b>남는 것</b>: 설문 응답 결과(기명 설문의 이름·학번 포함), 최고 관리자 학번과 권한, 관리자가 등록한 일정·설문·바로가기 링크·반 수 설정
+                </p>
+                <button type="button" id="resetYearButton" class="danger-button">학번 데이터 초기화</button>
+                <p id="resetMsg" class="login-error" hidden></p>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">© 학생회</footer>
@@ -142,9 +172,64 @@
             }
 
             const subAdminSummary = document.getElementById("subAdminSummary");
-            if (subAdminSummary) {
+            function updateSubAdminSummary() {
+                if (!subAdminSummary) return;
                 const n = Auth.listSubAdmins().length;
                 subAdminSummary.textContent = n ? `하위 관리자 ${n}명` : "지정된 하위 관리자가 없어요";
+            }
+            updateSubAdminSummary();
+
+            // ---- 최고 관리자 권한 이전 ----
+            const transferForm = document.getElementById("transferForm");
+            if (transferForm) {
+                const transferId = document.getElementById("transferId");
+                const transferPassword = document.getElementById("transferPassword");
+                const transferMsg = document.getElementById("transferMsg");
+                transferId.addEventListener("input", () => { transferId.value = transferId.value.replace(/\D/g, ""); });
+
+                transferForm.addEventListener("submit", event => {
+                    event.preventDefault();
+                    const id = transferId.value.trim();
+                    if (!id) return AdminPage.showMsg(transferMsg, "넘겨받을 학번을 입력해 주세요.", false);
+                    if (!transferPassword.value) return AdminPage.showMsg(transferMsg, "현재 최고 관리자 비밀번호를 입력해 주세요.", false);
+                    if (!confirm(`최고 관리자 권한을 ${id} 학번에게 넘길까요?\n넘기면 나는 일반 학생이 되고, 되돌리려면 ${id} 학번이 다시 넘겨줘야 해요.`)) return;
+
+                    const result = Auth.transferSuper(id, transferPassword.value);
+                    if (result === "ok") {
+                        alert(`${id} 학번에게 최고 관리자 권한을 넘겼어요. 로그아웃됩니다.`);
+                        location.href = "index.html";
+                        return;
+                    }
+                    transferPassword.value = "";
+                    AdminPage.showMsg(transferMsg, {
+                        wrong: "최고 관리자 비밀번호가 맞지 않아요.",
+                        invalid_id: "존재하지 않는 학번이에요. 다시 확인해 주세요.",
+                        same_id: "이미 내 학번이에요. 다른 학번을 입력해 주세요.",
+                        forbidden: "최고 관리자만 할 수 있어요.",
+                        error: "저장하지 못했어요. 저장 공간을 확인해 주세요."
+                    }[result] || "알 수 없는 오류가 났어요.", false);
+                });
+            }
+
+            // ---- 새 학년 초기화 ----
+            const resetButton = document.getElementById("resetYearButton");
+            if (resetButton) {
+                const resetMsg = document.getElementById("resetMsg");
+                resetButton.addEventListener("click", () => {
+                    if (!confirm("학번 데이터를 모두 초기화할까요?\n\n"
+                        + "• 모든 학번의 즐겨찾기\n• 학번별 설문 참여 기록\n• 하위 관리자 전체\n• 학생들의 로그인 상태\n\n"
+                        + "설문 응답 결과, 관리자가 등록한 일정·설문·링크, 최고 관리자 권한은 남아요.\n이 작업은 되돌릴 수 없어요.")) return;
+
+                    const result = Auth.resetYearData();
+                    if (result === "ok") {
+                        updateSubAdminSummary();
+                        AdminPage.showMsg(resetMsg, "초기화했어요. 학번 데이터를 모두 지웠어요.", true);
+                    } else {
+                        AdminPage.showMsg(resetMsg, result === "forbidden"
+                            ? "최고 관리자만 할 수 있어요."
+                            : "일부를 지우지 못했어요. 저장 공간을 확인하고 다시 눌러 주세요.", false);
+                    }
+                });
             }
         }
     </script>
