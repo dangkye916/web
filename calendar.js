@@ -58,64 +58,29 @@ let detailRef = null;       // 상세 팝업에 열려 있는 일정 { dateKey, 
 
 let schedules = getData("schedules", {});
 
-let oldFavorites = getData("favorites", []);
-
 let scheduleIdCounter = 1;
 
 function createScheduleId() {
     return `${Date.now()}-${scheduleIdCounter++}`;
 }
 
-// 예전 형식(문자열 / text 필드)을 새 형식으로 변환
-// 새 형식: { id, title, datetime, place, content, link }
-// (favorite 필드는 예전 데이터 호환용으로만 읽고, 이제는 사용자별 즐겨찾기를 따로 저장해요)
+// 저장된 일정을 { id, title, datetime, place, content, link } 형태로 맞춰요 (빠진 칸은 기본값으로)
 function normalizeSchedule(item, dateKey) {
-
-    if (typeof item === "string") {
-        return {
-            id: createScheduleId(),
-            title: item,
-            datetime: dateKey,
-            place: "",
-            content: "",
-            link: "",
-            favorite: false
-        };
-    }
-
     return {
         id: item.id ?? createScheduleId(),
-        title: item.title ?? item.text ?? "",
+        title: item.title ?? "",
         datetime: item.datetime ?? dateKey,
         place: item.place ?? "",
         content: item.content ?? "",
-        link: item.link ?? "",
-        favorite: Boolean(item.favorite)
+        link: item.link ?? ""
     };
 }
 
 for (const dateKey in schedules) {
 
-    const old = schedules[dateKey];
-
-    if (typeof old === "string") {
-
-        schedules[dateKey] = old.trim()
-            ? [{
-                ...normalizeSchedule(old, dateKey),
-                favorite: oldFavorites.includes(dateKey)
-            }]
-            : [];
-
-    } else if (Array.isArray(old)) {
-
-        schedules[dateKey] =
-            old.map(item => normalizeSchedule(item, dateKey));
-
-    } else {
-
-        schedules[dateKey] = [];
-    }
+    schedules[dateKey] = Array.isArray(schedules[dateKey])
+        ? schedules[dateKey].map(item => normalizeSchedule(item, dateKey))
+        : [];
 
     if (schedules[dateKey].length === 0) {
         delete schedules[dateKey];
@@ -138,7 +103,6 @@ const favoriteStorageKey =
     currentUser ? `favoriteIds_${currentUser.id}` : null;
 
 let favoriteIds = new Set();
-let hasSavedFavorites = false;
 
 if (favoriteStorageKey) {
 
@@ -147,7 +111,6 @@ if (favoriteStorageKey) {
 
     if (Array.isArray(saved)) {
         favoriteIds = new Set(saved);
-        hasSavedFavorites = true;
     }
 }
 
