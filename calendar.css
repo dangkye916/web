@@ -593,13 +593,6 @@ button:active {
     color: #2a5db0;
 }
 
-/* 학생에게 보이는 즐겨찾기 표시 (누를 수 없음) */
-.read-star {
-    padding: 0 6px;
-    font-size: 17px;
-    color: var(--star);
-}
-
 /* 메인으로 돌아가는 링크 */
 .back-link {
     display: inline-block;
