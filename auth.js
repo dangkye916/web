@@ -434,11 +434,11 @@ const Auth = (() => {
     }
 
     return {
-        getClassCount, setClassCount, MAX_CLASS, MAX_NUMBER,
+        getClassCount, setClassCount, MAX_CLASS,
         listSubAdmins, addSubAdmin, updateSubAdmin, removeSubAdmin, resetSubAdminPassword,
-        roleLabel, DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB, MIN_PASSWORD, MAX_PASSWORD, changePassword,
-        login, loginAdmin, logout, getUser, isAdmin, isAdminId, can, parseId, isValidId, renderUserArea,
-        resetYearData, transferSuper, getSuperId
+        DEFAULT_PASSWORD, MAX_NAME, MAX_CLUB, MIN_PASSWORD, MAX_PASSWORD, changePassword,
+        login, loginAdmin, logout, getUser, isAdmin, can, parseId, renderUserArea,
+        resetYearData, transferSuper
     };
 
 })();
