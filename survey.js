@@ -88,11 +88,7 @@ function isTarget(s, userId) {
 function fmt(v) { return v.replace("T", " "); }
 
 // 지금 시각을 datetime-local 입력과 같은 형식("2026-10-23T13:05")으로 (초는 버림)
-function nowLocal() {
-    const d = new Date();
-    const p = n => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-}
+const nowLocal = () => toLocalStr(new Date());
 
 // ================= 10분 단위 일시 선택 =================
 const STEP = 10; // 분 단위 간격
